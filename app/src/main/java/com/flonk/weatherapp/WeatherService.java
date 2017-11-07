@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.preference.Preference;
@@ -19,10 +20,17 @@ public class WeatherService extends Service {
     private final String LIST_OF_ALL_CITY_WEATHER_DATA = "com.flonk.weatherapp.list.of.all.city.weather.data";
     private IBinder _mBinder = new WeatherServiceBinder();
     private AllCitiesWeather _allCityWeatherData;
+    private WeatherQueryHelper weatherQueryHelper;
 
     public WeatherService() {
         SharedPreferences pref = this.getSharedPreferences(PREFERENCE, Context.MODE_PRIVATE);
         String weatherDataAsJson = pref.getString(LIST_OF_ALL_CITY_WEATHER_DATA, null);
+
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        weatherQueryHelper = new WeatherQueryHelper(connectivityManager);
+
 
         // this should only be null the first time the app runs
         if(weatherDataAsJson == null){
