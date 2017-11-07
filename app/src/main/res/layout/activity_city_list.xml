@@ -10,7 +10,7 @@
         android:id="@+id/buttonAdd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Add"
+        android:text="@string/btn_add"
         app:layout_constraintBottom_toTopOf="@+id/guideline"
         app:layout_constraintHorizontal_bias="0.915"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -23,7 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:text="Refresh"
+        android:text="@string/btn_refresh"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -35,7 +35,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:hint="Add City..."
+        android:hint="@string/et_add_city_hint"
         android:inputType="textPersonName"
         android:selectAllOnFocus="true"
         app:layout_constraintBottom_toTopOf="@+id/guideline"
@@ -59,10 +59,11 @@
         android:layout_marginBottom="32dp"
         android:layout_marginTop="32dp"
         app:layout_constraintBottom_toTopOf="@+id/buttonRefresh"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/guideline"
-        app:layout_constraintVertical_bias="0.486" />
+        app:layout_constraintVertical_bias="1.0" />
 
     <android.support.constraint.Guideline
         android:id="@+id/guideline2"
