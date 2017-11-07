@@ -25,12 +25,14 @@ public class WeatherQueryHelper {
     private DownloadTask mDownloadTask;
     static final String OPEN_WEATHER_API_KEY = "4aa9cb9ba2eedc113cae1b13d346bb97";
     private ConnectivityManager connectivityManager;
+    private WeatherQueryCallback callback;
 
-    public WeatherQueryHelper(ConnectivityManager manager){
+    public WeatherQueryHelper(ConnectivityManager manager, WeatherQueryCallback callback){
         connectivityManager = manager;
+        this.callback = callback;
     }
 
-    public String Query(String cityName, WeatherQueryCallback callback) throws JSONException {
+    public void Query(String cityName) throws JSONException {
         String OPEN_WEATHER_API_CITY =
                 "http://api.openweathermap.org/data/2.5/weather?q=" + cityName
                         + "&APPID=" + OPEN_WEATHER_API_KEY;
@@ -38,24 +40,9 @@ public class WeatherQueryHelper {
         mDownloadTask = new DownloadTask(callback);
         mDownloadTask.execute(OPEN_WEATHER_API_CITY);
 
-           //json string String must be parsed from textview
-        String jsonString = cityName;
-        String returnString = "Parse went wrong";
-        try{
-            JSONObject jsonObject = new JSONObject(jsonString);
-            String name = jsonObject.getString("name");
-            String temp = jsonObject.getJSONObject("main").getString("temp"); //Object inside object
-            String pressure = jsonObject.getJSONObject("main").getString("pressure");
-            String humidity = jsonObject.getJSONObject("main").getString("humidity");
-            returnString = "City: " + name + "\n" +
-                    "Temperature: " + temp + "K \n" +
-                    "Pressure: " + pressure + "hPa \n" +
-                    "Humidity: " + humidity + "% \n";
-        }
-        catch (JSONException jsonException) {
-            jsonException.printStackTrace();
-        }
-        return returnString;
+
+
+
     }
 
     public boolean CityWithNameExists(String cityName){

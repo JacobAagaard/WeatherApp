@@ -11,10 +11,16 @@ import android.preference.Preference;
 
 import com.google.gson.Gson;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class WeatherService extends Service {
+import static com.flonk.weatherapp.Globals.WEATHER_QUERY_DATA;
+import static com.flonk.weatherapp.Globals.WEATHER_QUERY_RESULT_FILTER;
+
+public class WeatherService extends Service implements WeatherQueryCallback {
 
     private final String PREFERENCE = "com.flonk.weatherapp.preference";
     private final String LIST_OF_ALL_CITY_WEATHER_DATA = "com.flonk.weatherapp.list.of.all.city.weather.data";
@@ -22,52 +28,70 @@ public class WeatherService extends Service {
     private AllCitiesWeather _allCityWeatherData;
     private WeatherQueryHelper weatherQueryHelper;
 
-    public WeatherService() {
-        SharedPreferences pref = this.getSharedPreferences(PREFERENCE, Context.MODE_PRIVATE);
-        String weatherDataAsJson = pref.getString(LIST_OF_ALL_CITY_WEATHER_DATA, null);
+    @Override
+    public void onCreate() {
+
+        GetAllCitiesWeatherFromPref();
 
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        weatherQueryHelper = new WeatherQueryHelper(connectivityManager);
+        weatherQueryHelper = new WeatherQueryHelper(connectivityManager, this);
 
+        super.onCreate();
+    }
 
-        // this should only be null the first time the app runs
-        if(weatherDataAsJson == null){
-            _allCityWeatherData = new AllCitiesWeather();
-        }
-        else{
-            Gson myGsonConverter = new Gson();
-            _allCityWeatherData = myGsonConverter.fromJson(weatherDataAsJson, AllCitiesWeather.class);
-        }
+    public WeatherService() {
+
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        return null;
+        return _mBinder;
+    }
+
+    @Override
+    public void QueryResult(String result) {
+        CityWeatherData newCityWeatherData = CreateCityWeatherDataFromJson(result);
+
+        int index = GetIndexOfCity(newCityWeatherData.Name);
+
+        if(index == -1){
+            _allCityWeatherData._listOfCityWeatherData.add(newCityWeatherData);
+            SaveAllCititesWeatherToPref(); // XXX: dont save for every query
+        }
+        else{
+            _allCityWeatherData._listOfCityWeatherData.set(index, newCityWeatherData);
+            SaveAllCititesWeatherToPref(); // XXX dont save for every query
+        }
+
+        // broadcasts the new weather data to listeners
+        // intens cant hold custom classes, and Gson is used to convert it to a string (Json)
+        Gson gson = new Gson();
+        Intent resultIntent = new Intent(WEATHER_QUERY_RESULT_FILTER);
+        resultIntent.putExtra(WEATHER_QUERY_DATA, gson.toJson(newCityWeatherData));
+        sendBroadcast(resultIntent);
     }
 
     public class WeatherServiceBinder extends Binder{
 
         CityWeatherData getCurrentWeather(String cityName){
+            int index = GetIndexOfCity(cityName);
 
-            // XXX should retreieve the latest version of the weather from the weather api!
-
-            for (CityWeatherData data : _allCityWeatherData._listOfCityWeatherData){
-                if(data.equals(cityName)){
-                    return data;
-                }
+            if(index == -1){
+                return null;
             }
-            return null;
+            else{
+                return _allCityWeatherData._listOfCityWeatherData.get(index);
+            }
         };
 
         List<CityWeatherData> getAllCitiesWeather(){
             return _allCityWeatherData._listOfCityWeatherData;
         }
 
-        void AddCity(String cityName){
-            throw new UnsupportedOperationException();
+        void AddCity(String cityName) throws JSONException {
+            weatherQueryHelper.Query(cityName);
         }
 
         void RemoveCity(String cityName){
@@ -89,6 +113,21 @@ public class WeatherService extends Service {
         public ArrayList<CityWeatherData> _listOfCityWeatherData = new ArrayList<CityWeatherData>();
     }
 
+
+
+    private void GetAllCitiesWeatherFromPref() {
+        SharedPreferences pref = getSharedPreferences(PREFERENCE, Context.MODE_PRIVATE);
+        String weatherDataAsJson = pref.getString(LIST_OF_ALL_CITY_WEATHER_DATA, null);
+
+        // this should only be null the first time the app runs
+        if (weatherDataAsJson == null) {
+            _allCityWeatherData = new AllCitiesWeather();
+        } else {
+            Gson myGsonConverter = new Gson();
+            _allCityWeatherData = myGsonConverter.fromJson(weatherDataAsJson, AllCitiesWeather.class);
+        }
+    }
+
     private void SaveAllCititesWeatherToPref(){
         SharedPreferences pref = this.getSharedPreferences(PREFERENCE, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
@@ -98,4 +137,36 @@ public class WeatherService extends Service {
         editor.commit();
     }
 
+    private CityWeatherData CreateCityWeatherDataFromJson(String jsonString){
+
+        String name,temp,humidity, description,icon, timestamp;
+
+        String returnString = "Parse went wrong";
+        try{
+            JSONObject jsonObject = new JSONObject(jsonString);
+            name = jsonObject.getString("name");
+            temp = jsonObject.getJSONObject("main").getString("temp"); //Object inside object
+            description = jsonObject.getJSONArray("weather").getJSONObject(0).getString("description");
+            icon = jsonObject.getJSONArray("weather").getJSONObject(0).getString("icon");
+            humidity = jsonObject.getJSONObject("main").getString("humidity");
+            timestamp = jsonObject.getString("dt");
+
+            return new CityWeatherData(name, temp, humidity, description, icon, timestamp);
+        }
+        catch (JSONException jsonException) {
+            jsonException.printStackTrace();
+        }
+        return null;
+    }
+
+    private int GetIndexOfCity(String cityName){
+        int count = _allCityWeatherData._listOfCityWeatherData.size();
+        for (int i = 0 ; i < count; i++){
+
+            if(_allCityWeatherData._listOfCityWeatherData.get(i).equals(cityName)){
+                return i;
+            }
+        }
+        return -1; // returns -1 if city was not found
+    }
 }

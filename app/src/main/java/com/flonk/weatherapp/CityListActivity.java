@@ -2,11 +2,15 @@ package com.flonk.weatherapp;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,10 +24,16 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import org.json.JSONException;
 
+import java.nio.channels.NotYetBoundException;
 import java.util.ArrayList;
+import java.util.EmptyStackException;
 import java.util.List;
+
+import static com.flonk.weatherapp.Globals.WEATHER_QUERY_DATA;
 
 
 // https://github.com/codepath/android_guides/wiki/Using-an-ArrayAdapter-with-ListView
@@ -37,6 +47,9 @@ public class CityListActivity extends AppCompatActivity {
     String[] listItems = {};
     ArrayList<String> arrayList = new ArrayList<>();
     final static String FILENAME = "StorageFile";
+    private BroadcastReceiver broadcastReceiver;
+    private WeatherService.WeatherServiceBinder weatherServiceBinder;
+    private boolean isBoundToWeatherService = false;
 
     private boolean mDownloading = false;
 
@@ -45,10 +58,17 @@ public class CityListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_city_list);
 
+
+        final Intent weatherServiceIntent = new Intent(CityListActivity.this, WeatherService.class);
+        //startService(weatherServiceIntent);
+        bindService(weatherServiceIntent,mConnection, Context.BIND_AUTO_CREATE);
+
+
         sharedPreferences = CityListActivity.this.getSharedPreferences(FILENAME , MODE_PRIVATE);
 
         listViewCities = findViewById(R.id.listViewCities);
         editTextAdd = findViewById(R.id.editTextAdd);
+
         editTextAdd.setOnKeyListener(new View.OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 // If the event is a key-down event on the "enter" button
@@ -61,6 +81,7 @@ public class CityListActivity extends AppCompatActivity {
                 return false;
             }
         });
+
         buttonRefresh = findViewById(R.id.buttonRefresh);
         buttonAdd = findViewById(R.id.buttonAdd);
 
@@ -70,8 +91,20 @@ public class CityListActivity extends AppCompatActivity {
                 if (editTextAdd.getText().toString().contentEquals(""))
                     Toast.makeText(CityListActivity.this, "You must enter city name", Toast.LENGTH_SHORT).show();
                 else{
-                    addCity(editTextAdd.getText().toString().trim());
+                    String enteredCityName = editTextAdd.getText().toString().trim();
+                    addCity(enteredCityName);
                     hideKeyboard(CityListActivity.this);
+
+                    if(isBoundToWeatherService){
+                        try {
+                            weatherServiceBinder.AddCity(enteredCityName);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    else{
+                        throw new NotYetBoundException();
+                    }
                 }
             }
         });
@@ -99,15 +132,23 @@ public class CityListActivity extends AppCompatActivity {
             }
         });
 
+        IntentFilter filter = new IntentFilter(Globals.WEATHER_QUERY_RESULT_FILTER);
+
         //Retrieve new data from Weather Service
-        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Toast.makeText(CityListActivity.this, "New data received", Toast.LENGTH_SHORT).show();
                 Bundle weatherData;
-                weatherData = intent.getExtras();
+                String result = intent.getStringExtra(WEATHER_QUERY_DATA);
+
+                Gson gson = new Gson();
+                CityWeatherData newCityWeatherData = gson.fromJson(result, CityWeatherData.class);
+                Toast.makeText(CityListActivity.this, newCityWeatherData.Name,Toast.LENGTH_LONG).show();
             }
         };
+
+        registerReceiver(broadcastReceiver, filter);
     }
 
     //Inspired by: https://stackoverflow.com/questions/1109022/close-hide-the-android-soft-keyboard
@@ -162,16 +203,11 @@ public class CityListActivity extends AppCompatActivity {
     }
 
     private void addCity(String cityName) {
-        //Toast.makeText(this, "You added " + cityName, Toast.LENGTH_SHORT).show();
-        SharedPreferences.Editor editor = sharedPreferences.edit(); //Initialize editor on sharedPref.
-
         arrayList.toArray(listItems.clone());
         arrayList.add(cityName);
         listItems = arrayList.toArray(new String[listItems.length]);
         listViewCities.setAdapter(new ArrayAdapter<>(CityListActivity.this,
                 android.R.layout.simple_list_item_1, listItems));
-        editor.putString("#" + (listItems.length-1), cityName);
-        editor.commit();    //Commit/apply changes.
 }
 
     public void removeCity(String cityName){
@@ -198,5 +234,20 @@ public class CityListActivity extends AppCompatActivity {
         startActivity(startCityDetailsIntent);
 
     }
+
+    private ServiceConnection mConnection= new ServiceConnection(){
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            weatherServiceBinder = (WeatherService.WeatherServiceBinder) iBinder;
+
+            isBoundToWeatherService = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            isBoundToWeatherService = false;
+        }
+    };
 
 }
