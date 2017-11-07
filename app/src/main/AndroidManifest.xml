@@ -9,7 +9,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".CityListActivity"
+        <activity
+            android:name=".CityListActivity"
             android:windowSoftInputMode="stateAlwaysHidden"> <!-- Hides keyboard on app startup -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -17,7 +18,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".CityDetailsActivity"></activity>
+        <activity android:name=".CityDetailsActivity" />
+
+        <service
+            android:name=".WeatherService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>
