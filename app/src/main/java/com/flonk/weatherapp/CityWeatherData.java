@@ -5,18 +5,27 @@ package com.flonk.weatherapp;
  */
 
 public class CityWeatherData {
-    private int _id;
-    private String _name;
-    private float _temperature;
-    private float _humidity;
-    private String _description;
+    public int ID;
+    // Name is made final to use the name in the sharedpref as the name og the pref: and when doing so it cannot change, else the pref will not return
+    public final String Name;
+    public float Temperature;
+    public float Humidity;
+    public String Description;
 
+    public CityWeatherData(int id, String name, float temp, float humidity, String description){
+        ID = id;
+        Name = name;
+        Temperature = temp;
+        Humidity = humidity;
+        Description = description;
+    }
 
     public CityWeatherData(){
-        _id = -1;
-        _name = "DefaultCity";
-        _temperature = 0.0f;
-        _humidity = 0.0f;
-        _description = "DefaultDescription";
+        ID = -1;
+        Name = "DefaultCity";
+        Temperature = 0.0f;
+        Humidity = 0.0f;
+        Description = "DefaultDescription";
     }
+
 }
