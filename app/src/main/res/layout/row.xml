@@ -8,7 +8,7 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/temperature"
+        android:id="@+id/tvTemperature"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="2dp"
@@ -16,51 +16,51 @@
         android:text="@string/tv_temperature"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/celsius"
+        app:layout_constraintEnd_toStartOf="@+id/tvCelsius"
         app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/percentage"
-        app:layout_constraintTop_toBottomOf="@+id/title"
+        app:layout_constraintStart_toEndOf="@+id/tvPercentage"
+        app:layout_constraintTop_toBottomOf="@+id/tvCityName"
         android:layout_marginRight="2dp"
         android:layout_marginLeft="8dp" />
 
     <TextView
-        android:id="@+id/celsius"
+        android:id="@+id/tvCelsius"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/tv_celsius"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        app:layout_constraintBaseline_toBaselineOf="@+id/temperature"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tvTemperature"
         app:layout_constraintHorizontal_bias="0.956"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
     <TextView
-        android:id="@+id/percentage"
+        android:id="@+id/tvPercentage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/tv_percentage"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        app:layout_constraintBaseline_toBaselineOf="@+id/humidity"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tvHumidity"
         app:layout_constraintHorizontal_bias="0.69"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
     <TextView
-        android:id="@+id/title"
+        android:id="@+id/tvCityName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/tv_cityname"
-        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:translationX="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/temperature"
+        app:layout_constraintBottom_toTopOf="@+id/tvTemperature"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imageView"
+        app:layout_constraintStart_toEndOf="@+id/imvIcon"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/humidity"
+        android:id="@+id/tvHumidity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="2dp"
@@ -68,22 +68,22 @@
         android:text="@string/tv_humidty"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/percentage"
+        app:layout_constraintEnd_toStartOf="@+id/tvPercentage"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/title"
+        app:layout_constraintStart_toEndOf="@+id/imvIcon"
+        app:layout_constraintTop_toBottomOf="@+id/tvCityName"
 
         android:layout_marginRight="2dp" />
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/imvIcon"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:contentDescription="@string/imv_weather_icon"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/title"
+        app:layout_constraintEnd_toStartOf="@+id/tvCityName"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@mipmap/ic_launcher_round" />
