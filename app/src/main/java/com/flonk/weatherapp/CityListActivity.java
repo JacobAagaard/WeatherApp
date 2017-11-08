@@ -142,6 +142,8 @@ public class CityListActivity extends AppCompatActivity {
                 Bundle weatherData;
                 String result = intent.getStringExtra(WEATHER_QUERY_DATA);
 
+
+
                 Gson gson = new Gson();
                 CityWeatherData newCityWeatherData = gson.fromJson(result, CityWeatherData.class);
                 Toast.makeText(CityListActivity.this, newCityWeatherData.Name,Toast.LENGTH_LONG).show();

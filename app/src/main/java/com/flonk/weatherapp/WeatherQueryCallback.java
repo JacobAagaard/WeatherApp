@@ -12,6 +12,6 @@ public interface WeatherQueryCallback {
      * Indicates that the callback handler needs to update its appearance or information based on
      * the result of the task. Expected to be called from the main thread.
      */
-    void QueryResult(String result);
+    void QueryResult(WeatherQueryHelper.WeatherQueryResult result);
 
 }

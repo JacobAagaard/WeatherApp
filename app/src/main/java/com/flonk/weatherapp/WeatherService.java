@@ -8,6 +8,7 @@ import android.net.ConnectivityManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.preference.Preference;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -51,24 +52,39 @@ public class WeatherService extends Service implements WeatherQueryCallback {
     }
 
     @Override
-    public void QueryResult(String result) {
-        CityWeatherData newCityWeatherData = CreateCityWeatherDataFromJson(result);
+    public void QueryResult(WeatherQueryHelper.WeatherQueryResult queryResult) {
+
+        // checks if the result of the query is an error
+        if(queryResult.mException != null){
+
+            String errorMsg = queryResult.mException.getMessage();
+
+            if(errorMsg.contains("404")){
+                Toast.makeText(this, "No City with that name is registered on the database! : " + errorMsg,Toast.LENGTH_LONG).show();
+            }
+            else{
+                Toast.makeText(this, "error: " + errorMsg,Toast.LENGTH_LONG).show();
+            }
+
+            return;
+        }
+
+        CityWeatherData newCityWeatherData = CreateCityWeatherDataFromJson(queryResult.mResultValue);
 
         int index = GetIndexOfCity(newCityWeatherData.Name);
 
-        if(index == -1){
+        if (index == -1) {
             _allCityWeatherData._listOfCityWeatherData.add(newCityWeatherData);
             SaveAllCititesWeatherToPref(); // XXX: dont save for every query
-        }
-        else{
+        } else {
             _allCityWeatherData._listOfCityWeatherData.set(index, newCityWeatherData);
             SaveAllCititesWeatherToPref(); // XXX dont save for every query
         }
 
         // broadcasts the new weather data to listeners
         // intens cant hold custom classes, and Gson is used to convert it to a string (Json)
-        Gson gson = new Gson();
         Intent resultIntent = new Intent(WEATHER_QUERY_RESULT_FILTER);
+        Gson gson = new Gson();
         resultIntent.putExtra(WEATHER_QUERY_DATA, gson.toJson(newCityWeatherData));
         sendBroadcast(resultIntent);
     }
