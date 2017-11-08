@@ -27,7 +27,7 @@ public class CityWeatherData {
         Temperature = "0.0";
         Humidity = "0.0";
         Description = "DefaultDescription";
-        Icon = "044n";
+        Icon = "04n";
         TimeStamp = "1999-01-01: 00:00:00";
     }
 

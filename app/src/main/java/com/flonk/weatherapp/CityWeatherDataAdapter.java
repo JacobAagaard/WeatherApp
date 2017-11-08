@@ -9,7 +9,9 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,9 +20,17 @@ import java.util.List;
  */
 
 public class CityWeatherDataAdapter extends ArrayAdapter<CityWeatherData> {
-    public CityWeatherDataAdapter(@NonNull Context context, int resource, @NonNull List<CityWeatherData> objects) {
+    public CityWeatherDataAdapter(@NonNull Context context, int resource, @NonNull ArrayList<CityWeatherData> objects) {
         super(context, resource, objects);
     }
+
+    @Override
+    public void addAll(CityWeatherData... items) {
+
+        notifyDataSetChanged(); // Notifies UI thread that content has changed
+        super.addAll(items);
+    }
+
 
     @NonNull
     @Override
@@ -35,12 +45,17 @@ public class CityWeatherDataAdapter extends ArrayAdapter<CityWeatherData> {
         TextView tvHumidity = convertView.findViewById(R.id.tvHumidity);
         ImageView imvIcon = convertView.findViewById(R.id.imvIcon);
 
-        // Populate the data into the template view using the data object
-        tvCityName.setText(cityWeatherData.Name);
-        tvTemperature.setText("" + cityWeatherData.Temperature);
-        tvHumidity.setText("" + cityWeatherData.Humidity);
-        //set imageView based on description
-        imvIcon.setImageResource(setIcon(cityWeatherData.Icon));    //
+        if(cityWeatherData != null){
+            // Populate the data into the template view using the data object
+            tvCityName.setText(cityWeatherData.Name);
+            tvTemperature.setText(cityWeatherData.Temperature);
+            tvHumidity.setText(cityWeatherData.Humidity);
+            //set imageView based on description
+            imvIcon.setImageResource(setIcon(cityWeatherData.Icon));
+            notifyDataSetChanged(); // Notifies UI thread that content has changed
+        }
+        else
+            Toast.makeText(getContext(), "object is null", Toast.LENGTH_SHORT).show();
 
         // Return the completed view to render on screen
         return convertView;

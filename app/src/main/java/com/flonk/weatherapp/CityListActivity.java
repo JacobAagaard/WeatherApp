@@ -53,16 +53,16 @@ public class CityListActivity extends AppCompatActivity {
 
     private boolean mDownloading = false;
 
+    ArrayList<CityWeatherData> arrayWeatherData = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_city_list);
 
-
         final Intent weatherServiceIntent = new Intent(CityListActivity.this, WeatherService.class);
         //startService(weatherServiceIntent);
         bindService(weatherServiceIntent,mConnection, Context.BIND_AUTO_CREATE);
-
 
         sharedPreferences = CityListActivity.this.getSharedPreferences(FILENAME , MODE_PRIVATE);
 
@@ -116,15 +116,6 @@ public class CityListActivity extends AppCompatActivity {
             }
         });
 
-        //Fetch added cities from sharedPrefs
-        for (int i = 0; i<listItems.length ; i++){
-            listItems[i] = sharedPreferences.getString("#" + i, "String doesn't exist");
-        }
-
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(CityListActivity.this,
-                R.layout.row, listItems);
-        listViewCities.setAdapter(arrayAdapter);
-
         listViewCities.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -138,13 +129,17 @@ public class CityListActivity extends AppCompatActivity {
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Toast.makeText(CityListActivity.this, "New data received", Toast.LENGTH_SHORT).show();
                 Bundle weatherData;
                 String result = intent.getStringExtra(WEATHER_QUERY_DATA);
 
                 Gson gson = new Gson();
                 CityWeatherData newCityWeatherData = gson.fromJson(result, CityWeatherData.class);
                 Toast.makeText(CityListActivity.this, newCityWeatherData.Name,Toast.LENGTH_LONG).show();
+
+                CityWeatherDataAdapter cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
+                        0, arrayWeatherData);
+                cityWeatherDataAdapter.add(newCityWeatherData);
+                listViewCities.setAdapter(cityWeatherDataAdapter);
             }
         };
 
@@ -206,9 +201,7 @@ public class CityListActivity extends AppCompatActivity {
         arrayList.toArray(listItems.clone());
         arrayList.add(cityName);
         listItems = arrayList.toArray(new String[listItems.length]);
-        listViewCities.setAdapter(new ArrayAdapter<>(CityListActivity.this,
-                android.R.layout.simple_list_item_1, listItems));
-}
+    }
 
     public void removeCity(String cityName){
         arrayList.toArray(listItems);
@@ -221,8 +214,13 @@ public class CityListActivity extends AppCompatActivity {
     private void refreshList() {
         Toast.makeText(this, "Refreshing list...", Toast.LENGTH_SHORT).show();
 
-        //Bind to Weather Service
-        //City List should actually be placed in Service
+        if(isBoundToWeatherService){
+            arrayWeatherData.addAll(weatherServiceBinder.getAllCitiesWeather());
+            CityWeatherDataAdapter cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
+                    0, arrayWeatherData);
+            cityWeatherDataAdapter.clear(); //Clear the list and add all cities again
+            listViewCities.setAdapter(cityWeatherDataAdapter);
+        }
     }
 
     private void startCityDetailsActivity(int cityID) {
@@ -242,6 +240,7 @@ public class CityListActivity extends AppCompatActivity {
             weatherServiceBinder = (WeatherService.WeatherServiceBinder) iBinder;
 
             isBoundToWeatherService = true;
+            setupMyCrazyAdapterArrayList();
         }
 
         @Override
@@ -249,5 +248,12 @@ public class CityListActivity extends AppCompatActivity {
             isBoundToWeatherService = false;
         }
     };
+
+    private void setupMyCrazyAdapterArrayList() {
+        arrayWeatherData.addAll(weatherServiceBinder.getAllCitiesWeather());
+        CityWeatherDataAdapter cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
+                0, arrayWeatherData);
+        listViewCities.setAdapter(cityWeatherDataAdapter);
+    }
 
 }

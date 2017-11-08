@@ -157,9 +157,8 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
     private CityWeatherData CreateCityWeatherDataFromJson(String jsonString){
 
-        String name,temp,humidity, description,icon, timestamp;
+        String name, temp, humidity, description, icon, timestamp;
 
-        String returnString = "Parse went wrong";
         try{
             JSONObject jsonObject = new JSONObject(jsonString);
             name = jsonObject.getString("name");
