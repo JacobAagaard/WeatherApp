@@ -65,6 +65,9 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             if(errorMsg.contains("404")){
                 Toast.makeText(this, "No City with that name is registered on the database! : " + errorMsg,Toast.LENGTH_LONG).show();
             }
+            else if(errorMsg.contains("429")){
+                Toast.makeText(this, "bro...... to many requests... Chill down mate : " + errorMsg, Toast.LENGTH_SHORT).show();
+            }
             else{
                 Toast.makeText(this, "error: " + errorMsg,Toast.LENGTH_LONG).show();
             }
@@ -105,7 +108,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             }
         };
 
-        List<CityWeatherData> getAllCitiesWeather(){
+        ArrayList<CityWeatherData> getAllCitiesWeather(){
             return _allCityWeatherData._listOfCityWeatherData;
         }
 
@@ -117,11 +120,6 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             int index = GetIndexOfCity(cityName);
             _allCityWeatherData._listOfCityWeatherData.remove(index);
 
-        }
-
-        void AddCityTester(String cityName){
-            _allCityWeatherData._listOfCityWeatherData.add(new CityWeatherData());
-            SaveAllCititesWeatherToPref();
         }
     }
 
@@ -181,7 +179,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         public void run() {
             try {
                 while(true) {
-                    Thread.sleep(5000);
+                    Thread.sleep(10000);
 
                     int count = _allCityWeatherData._listOfCityWeatherData.size();
                     for (int i = 0 ; i < count; i++){
@@ -200,8 +198,8 @@ public class WeatherService extends Service implements WeatherQueryCallback {
     private int GetIndexOfCity(String cityName){
         int count = _allCityWeatherData._listOfCityWeatherData.size();
         for (int i = 0 ; i < count; i++){
-
-            if(_allCityWeatherData._listOfCityWeatherData.get(i).equals(cityName)){
+            String elemCityName = _allCityWeatherData._listOfCityWeatherData.get(i).Name;
+            if(elemCityName.equals(cityName)){
                 return i;
             }
         }

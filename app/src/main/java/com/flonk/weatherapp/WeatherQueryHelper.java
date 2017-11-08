@@ -21,7 +21,7 @@ public class WeatherQueryHelper {
 
     private boolean mDownloading = false;
     private DownloadTask mDownloadTask;
-    static final String OPEN_WEATHER_API_KEY = "4aa9cb9ba2eedc113cae1b13d346bb97";
+    static final String OPEN_WEATHER_API_KEY = "fe348c5af8c35f9cbdcc51437012485b";
     private ConnectivityManager connectivityManager;
 
     public WeatherQueryHelper(ConnectivityManager manager){
