@@ -23,14 +23,12 @@ public class WeatherQueryHelper {
     private DownloadTask mDownloadTask;
     static final String OPEN_WEATHER_API_KEY = "4aa9cb9ba2eedc113cae1b13d346bb97";
     private ConnectivityManager connectivityManager;
-    private WeatherQueryCallback callback;
 
-    public WeatherQueryHelper(ConnectivityManager manager, WeatherQueryCallback callback){
+    public WeatherQueryHelper(ConnectivityManager manager){
         connectivityManager = manager;
-        this.callback = callback;
     }
 
-    public void Query(String cityName) throws JSONException {
+    public void Query(String cityName, WeatherQueryCallback callback) throws JSONException {
         String OPEN_WEATHER_API_CITY =
                 "http://api.openweathermap.org/data/2.5/weather?q=" + cityName
                         + "&APPID=" + OPEN_WEATHER_API_KEY;

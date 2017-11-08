@@ -5,7 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
+import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.Preference;
 import android.widget.Toast;
@@ -37,7 +39,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        weatherQueryHelper = new WeatherQueryHelper(connectivityManager, this);
+        weatherQueryHelper = new WeatherQueryHelper(connectivityManager);
 
         super.onCreate();
     }
@@ -48,6 +50,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
     @Override
     public IBinder onBind(Intent intent) {
+        //workerThread.start();
         return _mBinder;
     }
 
@@ -107,11 +110,13 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         }
 
         void AddCity(String cityName) throws JSONException {
-            weatherQueryHelper.Query(cityName);
+            weatherQueryHelper.Query(cityName, WeatherService.this);
         }
 
         void RemoveCity(String cityName){
-            throw new UnsupportedOperationException();
+            int index = GetIndexOfCity(cityName);
+            _allCityWeatherData._listOfCityWeatherData.remove(index);
+
         }
 
         void AddCityTester(String cityName){
@@ -120,11 +125,8 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         }
     }
 
-    private void SaveNewWeatherData(List<CityWeatherData> data){
-        throw new UnsupportedOperationException();
-    }
-
-
+    // class that contains a list of all CityWeatherData.
+    // It is used by Gson class to serialize and deserialize the entire object and then save it as a string in SharedPreference
     public class AllCitiesWeather{
         public ArrayList<CityWeatherData> _listOfCityWeatherData = new ArrayList<CityWeatherData>();
     }
@@ -175,6 +177,27 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         return null;
     }
 
+    Thread workerThread = new Thread() {
+        @Override
+        public void run() {
+            try {
+                while(true) {
+                    Thread.sleep(5000);
+
+                    int count = _allCityWeatherData._listOfCityWeatherData.size();
+                    for (int i = 0 ; i < count; i++){
+                        String cityName = _allCityWeatherData._listOfCityWeatherData.get(i).Name;
+                        weatherQueryHelper.Query(cityName, WeatherService.this);
+                    }
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
     private int GetIndexOfCity(String cityName){
         int count = _allCityWeatherData._listOfCityWeatherData.size();
         for (int i = 0 ; i < count; i++){
@@ -185,4 +208,10 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         }
         return -1; // returns -1 if city was not found
     }
+
+    private void Run() throws JSONException {
+        workerThread.start();
+    }
 }
+
+
