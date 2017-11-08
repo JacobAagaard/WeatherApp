@@ -116,7 +116,7 @@
         android:id="@+id/textViewDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/tv_description"
+        android:text="@string/tv_title_description"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -127,7 +127,7 @@
         app:layout_constraintVertical_bias="0.713" />
 
     <TextView
-        android:id="@+id/textViewWeather"
+        android:id="@+id/textViewWeatherDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"

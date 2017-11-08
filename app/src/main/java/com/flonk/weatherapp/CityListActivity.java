@@ -223,12 +223,16 @@ public class CityListActivity extends AppCompatActivity {
         }
     }
 
-    private void startCityDetailsActivity(int cityID) {
+    private void startCityDetailsActivity(int position) {
         //Toast.makeText(this, "Opening " + listItems[cityID], Toast.LENGTH_SHORT).show();
 
+        CityWeatherData currentData = arrayWeatherData.get(position);
+
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(currentData);
+
         Intent startCityDetailsIntent = new Intent(getApplicationContext(), CityDetailsActivity.class);
-        startCityDetailsIntent.putExtra("City_ID", cityID);
-        startCityDetailsIntent.putExtra("#"+cityID, listItems[cityID]);
+        startCityDetailsIntent.putExtra("City_ID", jsonString);
         startActivity(startCityDetailsIntent);
 
     }
