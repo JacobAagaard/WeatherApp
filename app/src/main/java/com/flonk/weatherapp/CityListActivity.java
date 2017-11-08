@@ -215,10 +215,10 @@ public class CityListActivity extends AppCompatActivity {
         Toast.makeText(this, "Refreshing list...", Toast.LENGTH_SHORT).show();
 
         if(isBoundToWeatherService){
-            arrayWeatherData.addAll(weatherServiceBinder.getAllCitiesWeather());
             CityWeatherDataAdapter cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
                     0, arrayWeatherData);
             cityWeatherDataAdapter.clear(); //Clear the list and add all cities again
+            arrayWeatherData.addAll(weatherServiceBinder.getAllCitiesWeather());
             listViewCities.setAdapter(cityWeatherDataAdapter);
         }
     }
@@ -234,7 +234,6 @@ public class CityListActivity extends AppCompatActivity {
         Intent startCityDetailsIntent = new Intent(getApplicationContext(), CityDetailsActivity.class);
         startCityDetailsIntent.putExtra("City_ID", jsonString);
         startActivity(startCityDetailsIntent);
-
     }
 
     private ServiceConnection mConnection= new ServiceConnection(){
