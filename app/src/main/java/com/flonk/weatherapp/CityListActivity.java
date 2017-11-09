@@ -94,6 +94,8 @@ public class CityListActivity extends AppCompatActivity {
             }
         });
 
+        IntentFilter filter = new IntentFilter(Globals.WEATHER_QUERY_RESULT_FILTER);
+
         //Retrieve new data from Weather Service
         broadcastReceiver = new BroadcastReceiver() {
             @Override
@@ -114,6 +116,7 @@ public class CityListActivity extends AppCompatActivity {
                 }
             }
         };
+        registerReceiver(broadcastReceiver, filter);
     }
 
     //Inspired by: https://stackoverflow.com/questions/1109022/close-hide-the-android-soft-keyboard
@@ -135,9 +138,14 @@ public class CityListActivity extends AppCompatActivity {
                 case RESULT_CODE_REMOVE:
                     allCitiesWeather = weatherServiceBinder.getAllCitiesWeather();
                     cityWeatherDataAdapter.notifyDataSetChanged();
+                    break;
+                case RESULT_OK:
+                    allCitiesWeather = weatherServiceBinder.getAllCitiesWeather();
+                    CityWeatherData cityWeatherData = allCitiesWeather.GetCityWeatherData(data.getStringExtra(CITY_WEATHER_NAME));
+                    cityWeatherData.ChangeIcon = true;
+                    cityWeatherDataAdapter.notifyDataSetChanged();
+                    break;
             }
-
-            cityWeatherDataAdapter.notifyDataSetChanged();
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -187,9 +195,8 @@ public class CityListActivity extends AppCompatActivity {
         CityWeatherData currentData = allCitiesWeather.GetAllCitiesWeatherData().get(position);
 
         Intent startCityDetailsIntent = new Intent(getApplicationContext(), CityDetailsActivity.class);
-        startCityDetailsIntent.putExtra(Globals.CITY_WEATHER_NAME, currentData.Name);
-        //startActivityForResult(startCityDetailsIntent, REQUEST_CODE_DETAILS);
-        startActivity(startCityDetailsIntent);
+        startCityDetailsIntent.putExtra(CITY_WEATHER_NAME, currentData.Name);
+        startActivityForResult(startCityDetailsIntent, REQUEST_CODE_DETAILS);
     }
 
     private ServiceConnection mConnection= new ServiceConnection(){
@@ -226,4 +233,5 @@ public class CityListActivity extends AppCompatActivity {
         }
         return false;
     }
+
 }

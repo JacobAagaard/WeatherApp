@@ -43,8 +43,11 @@ public class CityWeatherDataAdapter extends ArrayAdapter<CityWeatherData> {
         TextView tvTemperature = convertView.findViewById(R.id.tvTemperature);
         TextView tvHumidity = convertView.findViewById(R.id.tvHumidity);
         ImageView imvIcon = convertView.findViewById(R.id.imvIcon);
+        ImageView imvNewData = convertView.findViewById(R.id.imvNewData);
 
         if(cityWeatherData != null){
+            if (cityWeatherData.ChangeIcon)
+                imvNewData.setImageResource(R.mipmap.ic_launcher);
             // Populate the data into the template view using the data object
             tvCityName.setText(cityWeatherData.Name);
             tvTemperature.setText(cityWeatherData.Temperature);
@@ -102,4 +105,5 @@ public class CityWeatherDataAdapter extends ArrayAdapter<CityWeatherData> {
                 return R.mipmap.ic_launcher;
         }
     }
+
 }
