@@ -1,6 +1,7 @@
 package com.flonk.weatherapp;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -47,7 +48,16 @@ public class CityListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_city_list);
 
         final Intent weatherServiceIntent = new Intent(CityListActivity.this, WeatherService.class);
-        //startService(weatherServiceIntent);
+
+        if(!isMyServiceRunning(WeatherService.class)){
+            startService(weatherServiceIntent);
+            Log.d("CityListActivity", "Service was not already running!");
+        }
+        else{
+            Log.d("CityListActivity", "Service was already running!");
+        }
+
+
         bindService(weatherServiceIntent,mConnection, Context.BIND_AUTO_CREATE);
 
         listViewCities = findViewById(R.id.listViewCities);
@@ -102,12 +112,8 @@ public class CityListActivity extends AppCompatActivity {
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Bundle weatherData;
-                String result = intent.getStringExtra(NEW_WEATHER_DATA);
-
-                Gson gson = new Gson();
-                CityWeatherData newCityWeatherData = gson.fromJson(result, CityWeatherData.class);
-                String cityName = newCityWeatherData.Name;
+                String cityName = intent.getStringExtra(NEW_WEATHER_DATA);
+                CityWeatherData newCityWeatherData = weatherServiceBinder.getCurrentWeather(cityName);
 
                 Log.d("CityListActivity", "broadcastReciever: newcityData from: " + cityName);
 
@@ -189,6 +195,17 @@ public class CityListActivity extends AppCompatActivity {
         cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
                 0, allCitiesWeather.GetAllCitiesWeatherData());
         listViewCities.setAdapter(cityWeatherDataAdapter);
+    }
+
+    // from : https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

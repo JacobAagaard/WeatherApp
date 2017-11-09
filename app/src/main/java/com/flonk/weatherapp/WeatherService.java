@@ -186,7 +186,8 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         public void run() {
             try {
                 while(true) {
-                    Thread.sleep(10000);
+                    Thread.sleep(60000);
+                    Log.d("WeatherService", "Calling UpdateListOfCityWeatherData, containing " + _allCityWeatherData.GetAllCitiesWeatherData().size() + " cities");
                     UpdateListOfCityWeatherData();
                 }
             } catch (InterruptedException e) {
