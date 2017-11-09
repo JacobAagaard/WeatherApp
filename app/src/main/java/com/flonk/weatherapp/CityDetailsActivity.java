@@ -1,5 +1,6 @@
 package com.flonk.weatherapp;
 
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -7,13 +8,18 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.List;
 
 import static com.flonk.weatherapp.Globals.CITY_WEATHER_NAME;
 import static com.flonk.weatherapp.Globals.RESULT_CODE_REMOVE;
@@ -36,9 +42,7 @@ public class CityDetailsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_city_details);
 
-        Intent bindServiceIntent = new Intent(this, WeatherService.class);
-        bindService(bindServiceIntent, serviceConnection, BIND_AUTO_CREATE);
-        cityName = getIntent().getStringExtra("City_Name");
+
 
         buttonOK = findViewById(R.id.buttonOK);
         buttonRemove = findViewById(R.id.buttonRemove);
@@ -60,22 +64,54 @@ public class CityDetailsActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if(isBoundToWeatherService){
                     weatherServiceBinder.RemoveCity(cityName);
-                    setResult(RESULT_CODE_REMOVE);
-                    setIntent(new Intent().putExtra(CITY_WEATHER_NAME, cityName));
                 }
                 else
                 {
                     Toast.makeText(CityDetailsActivity.this, "NOT BOUND", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                if(getIntent().getBooleanExtra(Globals.CITY_DETAIL_ACTIVITY_STARTED_FROM_SERVICE, false)){
+                    Intent intent = new Intent(CityDetailsActivity.this, CityListActivity.class);
+                    //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra(Globals.CITY_LIST_ACTIVITY_STARTED_FROM_CITY_DETIAL_ACTIVITY, true);
+                    startActivity(intent);
+                }
+
+                setResult(RESULT_CODE_REMOVE);
+                //setIntent(new Intent().putExtra(CITY_WEATHER_NAME, cityName));
                 finish();
             }
         });
     }
 
     @Override
+    protected void onResume() {
+        Intent weatherServiceIntent = new Intent(CityDetailsActivity.this, WeatherService.class);
+
+        if(!isMyServiceRunning(WeatherService.class)){
+            startService(weatherServiceIntent);
+            Log.d("CityDetailActivity", "Service was not already running!");
+        }
+        else{
+            Log.d("CityDetailActivity", "Service was already running!");
+        }
+
+        if(!isBoundToWeatherService){
+            bindService(weatherServiceIntent,serviceConnection, Context.BIND_AUTO_CREATE);
+        }
+
+        // gets the name of the game: ie. the city name of the context the detail view was opened with.
+        cityName = getIntent().getStringExtra(Globals.CITY_WEATHER_NAME);
+
+        super.onResume();
+    }
+
+    @Override
     protected void onPause() {
-        unbindService(serviceConnection);
+        if(isBoundToWeatherService){
+            unbindService(serviceConnection);
+        }
         super.onPause();
     }
 
@@ -84,6 +120,7 @@ public class CityDetailsActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             weatherServiceBinder = (WeatherService.WeatherServiceBinder) iBinder;
             isBoundToWeatherService = true;
+
             setupUIWithServiceData();
         }
 
@@ -95,7 +132,6 @@ public class CityDetailsActivity extends AppCompatActivity {
 
     private void setupUIWithServiceData(){
         allCitiesWeather = weatherServiceBinder.getAllCitiesWeather();
-        String cityName = getIntent().getStringExtra("City_Name");
         CityWeatherData currentData = allCitiesWeather.GetCityWeatherData(cityName);
         textViewCityName.setText(currentData.Name);
         textViewHumidity.setText(currentData.Humidity);
@@ -145,5 +181,16 @@ public class CityDetailsActivity extends AppCompatActivity {
             default:
                 return R.mipmap.ic_launcher;
         }
+    }
+
+    // from : https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

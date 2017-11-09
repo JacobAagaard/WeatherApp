@@ -1,5 +1,8 @@
 package com.flonk.weatherapp;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -24,9 +27,14 @@ public class WeatherService extends Service implements WeatherQueryCallback {
     private IBinder _mBinder = new WeatherServiceBinder();
     private AllCitiesWeather _allCityWeatherData;
     private WeatherQueryHelper weatherQueryHelper;
+    private int notificationId = 1234;
+    private NotificationManager notificationManager;
+
 
     @Override
     public void onCreate() {
+
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         GetAllCitiesWeatherFromPref();
 
@@ -35,7 +43,11 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
         weatherQueryHelper = new WeatherQueryHelper(connectivityManager);
 
-        workerThread.start();
+        try {
+            Run();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         super.onCreate();
     }
@@ -46,7 +58,6 @@ public class WeatherService extends Service implements WeatherQueryCallback {
     }
 
     public WeatherService() {
-
     }
 
     @Override
@@ -71,7 +82,6 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             else{
                 Toast.makeText(this, "error: " + errorMsg,Toast.LENGTH_LONG).show();
             }
-
             return;
         }
 
@@ -187,9 +197,17 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         public void run() {
             try {
                 while(true) {
-                    Thread.sleep(60000);
+                    Thread.sleep(5000);
                     Log.d("WeatherService", "Calling UpdateListOfCityWeatherData, containing " + _allCityWeatherData.GetAllCitiesWeatherData().size() + " cities");
                     UpdateListOfCityWeatherData();
+
+                    if(_allCityWeatherData.GetAllCitiesWeatherData().size() > 0){
+                        CreateNotification(_allCityWeatherData.GetAllCitiesWeatherData().get(0).Name);
+                    }
+                    else{
+                        notificationManager.cancel(notificationId);
+                    }
+
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -201,6 +219,27 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
     private void Run() throws JSONException {
         workerThread.start();
+    }
+
+    // inspiration from: https://stackoverflow.com/questions/15758980/android-service-needs-to-run-always-never-pause-or-stop
+    private void CreateNotification(String cityName){
+
+        Notification.Builder builder = new Notification.Builder(this)
+                .setContentTitle("TestTitle")
+                .setContentText("TestMessage")
+                .setSmallIcon(R.mipmap.ic_launcher);
+
+        // we need to build a basic notification first, then update it
+        Intent intent = new Intent(this, CityDetailsActivity.class);
+        intent.putExtra(Globals.CITY_WEATHER_NAME, cityName);
+        intent.putExtra(Globals.CITY_DETAIL_ACTIVITY_STARTED_FROM_SERVICE, true);
+        //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        PendingIntent pendIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        builder.setContentIntent(pendIntent);
+
+        notificationManager.notify(notificationId, builder.build());
     }
 }
 
