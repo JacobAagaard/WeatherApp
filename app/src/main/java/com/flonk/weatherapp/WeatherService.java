@@ -104,7 +104,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
         CityWeatherData getCurrentWeather(String cityName){
             return _allCityWeatherData.GetCityWeatherData(cityName);
-        };
+        }
 
         AllCitiesWeather getAllCitiesWeather(){
             return _allCityWeatherData;
