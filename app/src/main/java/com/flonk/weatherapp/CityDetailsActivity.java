@@ -13,12 +13,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.google.gson.Gson;
-
-import java.lang.reflect.Method;
-
-import static com.flonk.weatherapp.Globals.NEW_WEATHER_DATA;
+import static com.flonk.weatherapp.Globals.CITY_WEATHER_NAME;
+import static com.flonk.weatherapp.Globals.RESULT_CODE_REMOVE;
 
 public class CityDetailsActivity extends AppCompatActivity {
 
@@ -29,13 +27,18 @@ public class CityDetailsActivity extends AppCompatActivity {
     private WeatherService.WeatherServiceBinder weatherServiceBinder;
     private boolean isBoundToWeatherService = false;
 
+    AllCitiesWeather allCitiesWeather;
+    CityWeatherData currentData;
+
+    String cityName;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_city_details);
 
         Intent bindServiceIntent = new Intent(this, WeatherService.class);
         bindService(bindServiceIntent, serviceConnection, BIND_AUTO_CREATE);
-
+        cityName = getIntent().getStringExtra("City_Name");
 
         buttonOK = findViewById(R.id.buttonOK);
         buttonRemove = findViewById(R.id.buttonRemove);
@@ -44,17 +47,6 @@ public class CityDetailsActivity extends AppCompatActivity {
         textViewWeatherDescription = findViewById(R.id.textViewWeatherDescription);
         textViewTemperature = findViewById(R.id.textViewTemperature);
         imvIcon = findViewById(R.id.imvIcon);
-
-        Gson gson = new Gson();
-        String intentString = getIntent().getStringExtra("City_ID");
-
-        CityWeatherData cityWeatherData = gson.fromJson(intentString, CityWeatherData.class);
-
-        textViewCityName.setText(cityWeatherData.Name);
-        textViewHumidity.setText(cityWeatherData.Humidity);
-        textViewTemperature.setText(cityWeatherData.Temperature);
-        textViewWeatherDescription.setText(cityWeatherData.Description);
-        imvIcon.setImageResource(setIcon(cityWeatherData.Icon));
 
         buttonOK.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,9 +58,25 @@ public class CityDetailsActivity extends AppCompatActivity {
         buttonRemove.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(isBoundToWeatherService){
+                    weatherServiceBinder.RemoveCity(cityName);
+                    setResult(RESULT_CODE_REMOVE);
+                    setIntent(new Intent().putExtra(CITY_WEATHER_NAME, cityName));
+                }
+                else
+                {
+                    Toast.makeText(CityDetailsActivity.this, "NOT BOUND", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 finish();
             }
         });
+    }
+
+    @Override
+    protected void onPause() {
+        unbindService(serviceConnection);
+        super.onPause();
     }
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -76,6 +84,7 @@ public class CityDetailsActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             weatherServiceBinder = (WeatherService.WeatherServiceBinder) iBinder;
             isBoundToWeatherService = true;
+            setupUIWithServiceData();
         }
 
         @Override
@@ -83,6 +92,17 @@ public class CityDetailsActivity extends AppCompatActivity {
             isBoundToWeatherService = false;
         }
     };
+
+    private void setupUIWithServiceData(){
+        allCitiesWeather = weatherServiceBinder.getAllCitiesWeather();
+        String cityName = getIntent().getStringExtra("City_Name");
+        CityWeatherData currentData = allCitiesWeather.GetCityWeatherData(cityName);
+        textViewCityName.setText(currentData.Name);
+        textViewHumidity.setText(currentData.Humidity);
+        textViewTemperature.setText(currentData.Temperature);
+        textViewWeatherDescription.setText(currentData.Description);
+        imvIcon.setImageResource(setIcon(currentData.Icon));
+    }
 
     private int setIcon(String iconID){
         switch (iconID){

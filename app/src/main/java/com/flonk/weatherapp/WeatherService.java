@@ -12,7 +12,8 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
-import static com.flonk.weatherapp.Globals.NEW_WEATHER_DATA;
+
+import static com.flonk.weatherapp.Globals.CITY_WEATHER_NAME;
 import static com.flonk.weatherapp.Globals.WEATHER_QUERY_RESULT_FILTER;
 import static java.lang.Math.round;
 
@@ -95,7 +96,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
         // broadcasts that new data is available
         Intent resultIntent = new Intent(WEATHER_QUERY_RESULT_FILTER);
-        resultIntent.putExtra(NEW_WEATHER_DATA, newCityWeatherData.Name);
+        resultIntent.putExtra(CITY_WEATHER_NAME, newCityWeatherData.Name);
         sendBroadcast(resultIntent);
     }
 

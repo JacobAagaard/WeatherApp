@@ -20,13 +20,14 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-
 import org.json.JSONException;
 
 import java.nio.channels.NotYetBoundException;
 
-import static com.flonk.weatherapp.Globals.NEW_WEATHER_DATA;
+import static com.flonk.weatherapp.Globals.CITY_WEATHER_NAME;
+
+import static com.flonk.weatherapp.Globals.REQUEST_CODE_DETAILS;
+import static com.flonk.weatherapp.Globals.RESULT_CODE_REMOVE;
 
 public class CityListActivity extends AppCompatActivity {
 
@@ -56,7 +57,6 @@ public class CityListActivity extends AppCompatActivity {
         else{
             Log.d("CityListActivity", "Service was already running!");
         }
-
 
         bindService(weatherServiceIntent,mConnection, Context.BIND_AUTO_CREATE);
 
@@ -112,7 +112,7 @@ public class CityListActivity extends AppCompatActivity {
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                String cityName = intent.getStringExtra(NEW_WEATHER_DATA);
+                String cityName = intent.getStringExtra(CITY_WEATHER_NAME);
                 CityWeatherData newCityWeatherData = weatherServiceBinder.getCurrentWeather(cityName);
 
                 Log.d("CityListActivity", "broadcastReciever: newcityData from: " + cityName);
@@ -144,9 +144,15 @@ public class CityListActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onRestart() {
-        allCitiesWeather = weatherServiceBinder.getAllCitiesWeather();
-        super.onRestart();
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == REQUEST_CODE_DETAILS){
+            switch (resultCode){
+                case RESULT_CODE_REMOVE:
+                    allCitiesWeather.RemoveCity(getIntent().getStringExtra(CITY_WEATHER_NAME));
+                    cityWeatherDataAdapter.notifyDataSetChanged();
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -165,12 +171,9 @@ public class CityListActivity extends AppCompatActivity {
     private void startCityDetailsActivity(int position) {
         CityWeatherData currentData = allCitiesWeather.GetAllCitiesWeatherData().get(position);
 
-        Gson gson = new Gson();
-        String jsonString = gson.toJson(currentData);
-
         Intent startCityDetailsIntent = new Intent(getApplicationContext(), CityDetailsActivity.class);
-        startCityDetailsIntent.putExtra("City_ID", jsonString);
-        startActivity(startCityDetailsIntent);
+        startCityDetailsIntent.putExtra("City_Name", currentData.Name);
+        startActivityForResult(startCityDetailsIntent, REQUEST_CODE_DETAILS);
     }
 
     private ServiceConnection mConnection= new ServiceConnection(){
