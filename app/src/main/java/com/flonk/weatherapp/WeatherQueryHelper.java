@@ -168,8 +168,9 @@ public class WeatherQueryHelper {
 
 
                 if (stream != null) {
-                    // Converts Stream to String with max length of 500.
-                    result = readStream(stream, 500);
+                    // maxReadSize determines the maximum number of characters the HTTP request can read and return.
+                    int maxReadSize = 1000;
+                    result = readStream(stream, maxReadSize);
                 }
             } finally {
                 // Close Stream and disconnect HTTPS connection.

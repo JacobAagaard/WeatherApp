@@ -40,20 +40,21 @@ import static com.flonk.weatherapp.Globals.WEATHER_QUERY_DATA;
 
 public class CityListActivity extends AppCompatActivity {
 
-    Button buttonAdd, buttonRefresh;
-    EditText editTextAdd;
-    ListView listViewCities;
-    SharedPreferences sharedPreferences;
-    String[] listItems = {};
-    ArrayList<String> arrayList = new ArrayList<>();
+    private Button buttonAdd, buttonRefresh;
+    private EditText editTextAdd;
+    private ListView listViewCities;
+    private SharedPreferences sharedPreferences;
+    private String[] listItems = {};
     final static String FILENAME = "StorageFile";
     private BroadcastReceiver broadcastReceiver;
     private WeatherService.WeatherServiceBinder weatherServiceBinder;
     private boolean isBoundToWeatherService = false;
-
     private boolean mDownloading = false;
+    private AllCitiesWeather allCitiesWeather;
+    private CityWeatherDataAdapter cityWeatherDataAdapter;
 
-    ArrayList<CityWeatherData> arrayWeatherData = new ArrayList<>();
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,20 +69,6 @@ public class CityListActivity extends AppCompatActivity {
 
         listViewCities = findViewById(R.id.listViewCities);
         editTextAdd = findViewById(R.id.editTextAdd);
-
-        editTextAdd.setOnKeyListener(new View.OnKeyListener() {
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                // If the event is a key-down event on the "enter" button
-                if ((event.getAction() == KeyEvent.ACTION_DOWN) &&
-                        (keyCode == KeyEvent.KEYCODE_ENTER)) {
-                    addCity(editTextAdd.getText().toString().trim());
-                    hideKeyboard(CityListActivity.this);
-                    return true;
-                }
-                return false;
-            }
-        });
-
         buttonRefresh = findViewById(R.id.buttonRefresh);
         buttonAdd = findViewById(R.id.buttonAdd);
 
@@ -92,7 +79,6 @@ public class CityListActivity extends AppCompatActivity {
                     Toast.makeText(CityListActivity.this, "You must enter city name", Toast.LENGTH_SHORT).show();
                 else{
                     String enteredCityName = editTextAdd.getText().toString().trim();
-                    addCity(enteredCityName);
                     hideKeyboard(CityListActivity.this);
 
                     if(isBoundToWeatherService){
@@ -112,7 +98,11 @@ public class CityListActivity extends AppCompatActivity {
         buttonRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                refreshList();
+                try {
+                    refreshList();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -134,12 +124,19 @@ public class CityListActivity extends AppCompatActivity {
 
                 Gson gson = new Gson();
                 CityWeatherData newCityWeatherData = gson.fromJson(result, CityWeatherData.class);
-                Toast.makeText(CityListActivity.this, newCityWeatherData.Name,Toast.LENGTH_LONG).show();
+                String cityName = newCityWeatherData.Name;
 
-                CityWeatherDataAdapter cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
-                        0, arrayWeatherData);
-                cityWeatherDataAdapter.add(newCityWeatherData);
-                listViewCities.setAdapter(cityWeatherDataAdapter);
+                Log.d("CityListActivity", "broadcastReciever: newcityData from: " + cityName);
+
+                if(allCitiesWeather.CityExists(cityName)){
+                    allCitiesWeather.UpdateCityWeatherData(cityName, newCityWeatherData);
+                    cityWeatherDataAdapter.notifyDataSetChanged();
+                }
+                else{
+                    allCitiesWeather.AddCity(newCityWeatherData);
+                    cityWeatherDataAdapter.add(newCityWeatherData);
+                    cityWeatherDataAdapter.notifyDataSetChanged();
+                }
             }
         };
 
@@ -160,73 +157,25 @@ public class CityListActivity extends AppCompatActivity {
 
     @Override
     protected void onRestart() {
-        for (int i = 0; i<listItems.length ; i++){
-            listItems[i] = sharedPreferences.getString("#" + i, "String doesn't exist");
-        }
-
-        //getAllCitiesWeather().toArray((new String[listItems.length]));
-
+        allCitiesWeather = weatherServiceBinder.getAllCitiesWeather();
         super.onRestart();
     }
 
     @Override
     protected void onStop() {
-        //Inspired by: https://developer.android.com/training/basics/data-storage/shared-preferences.html
-        SharedPreferences.Editor editor = sharedPreferences.edit(); //Initialize editor on sharedPref.
-
-        //Only save list if items exist
-        if(listItems.length > 0)
-            saveStrings();
-
-        for(int i = 0; i<listItems.length; i++){
-            editor.putString("#"+i, listItems[i]);
-        }
-
-        editor.commit();    //Commit/apply changes.
         super.onStop();
     }
 
-    private void saveStrings() {
-        SharedPreferences.Editor editor = sharedPreferences.edit(); //Initialize editor on sharedPref.
-
-        for(int i = 0; i<listItems.length; i++){
-            editor.putString("#"+i, listItems[i]);
-        }
-        //editor.putString("#" + (listItems.length), cityName);
-        editor.clear();
-        editor.commit();    //Commit/apply changes.
-    }
-
-    private void addCity(String cityName) {
-        arrayList.toArray(listItems.clone());
-        arrayList.add(cityName);
-        listItems = arrayList.toArray(new String[listItems.length]);
-    }
-
-    public void removeCity(String cityName){
-        arrayList.toArray(listItems);
-
-        //TODO: Remove city based on name
-        Object object = new Object();
-        arrayList.remove(object);
-    }
-
-    private void refreshList() {
+    private void refreshList() throws JSONException {
         Toast.makeText(this, "Refreshing list...", Toast.LENGTH_SHORT).show();
 
         if(isBoundToWeatherService){
-            CityWeatherDataAdapter cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
-                    0, arrayWeatherData);
-            cityWeatherDataAdapter.clear(); //Clear the list and add all cities again
-            arrayWeatherData.addAll(weatherServiceBinder.getAllCitiesWeather());
-            listViewCities.setAdapter(cityWeatherDataAdapter);
+            weatherServiceBinder.RefreshCityWeatherList();
         }
     }
 
     private void startCityDetailsActivity(int position) {
-        //Toast.makeText(this, "Opening " + listItems[cityID], Toast.LENGTH_SHORT).show();
-
-        CityWeatherData currentData = arrayWeatherData.get(position);
+        CityWeatherData currentData = allCitiesWeather.GetAllCitiesWeatherData().get(position);
 
         Gson gson = new Gson();
         String jsonString = gson.toJson(currentData);
@@ -253,9 +202,10 @@ public class CityListActivity extends AppCompatActivity {
     };
 
     private void setupMyCrazyAdapterArrayList() {
-        arrayWeatherData.addAll(weatherServiceBinder.getAllCitiesWeather());
-        CityWeatherDataAdapter cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
-                0, arrayWeatherData);
+        allCitiesWeather = new AllCitiesWeather(weatherServiceBinder.getAllCitiesWeather().GetAllCitiesWeatherData());
+
+        cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
+                0, allCitiesWeather.GetAllCitiesWeatherData());
         listViewCities.setAdapter(cityWeatherDataAdapter);
     }
 

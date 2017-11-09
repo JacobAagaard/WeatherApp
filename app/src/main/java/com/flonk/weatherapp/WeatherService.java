@@ -5,23 +5,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
-import android.os.AsyncTask;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
-import android.preference.Preference;
+import android.util.Log;
 import android.widget.Toast;
-
 import com.google.gson.Gson;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import static com.flonk.weatherapp.Globals.WEATHER_QUERY_DATA;
 import static com.flonk.weatherapp.Globals.WEATHER_QUERY_RESULT_FILTER;
+import static java.lang.Math.round;
 
 public class WeatherService extends Service implements WeatherQueryCallback {
 
@@ -41,6 +34,8 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
         weatherQueryHelper = new WeatherQueryHelper(connectivityManager);
 
+        //workerThread.start();
+
         super.onCreate();
     }
 
@@ -50,7 +45,6 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
     @Override
     public IBinder onBind(Intent intent) {
-        //workerThread.start();
         return _mBinder;
     }
 
@@ -77,13 +71,20 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
         CityWeatherData newCityWeatherData = CreateCityWeatherDataFromJson(queryResult.mResultValue);
 
-        int index = GetIndexOfCity(newCityWeatherData.Name);
+        if(newCityWeatherData == null){
+            Toast.makeText(this, "Query return null", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        if (index == -1) {
-            _allCityWeatherData._listOfCityWeatherData.add(newCityWeatherData);
+        Log.d("WeatherService", "In QueryResult, query return with city: " + newCityWeatherData.Name);
+
+
+        if (!_allCityWeatherData.CityExists(newCityWeatherData.Name)) {
+            _allCityWeatherData.AddCity(newCityWeatherData);
             SaveAllCititesWeatherToPref(); // XXX: dont save for every query
         } else {
-            _allCityWeatherData._listOfCityWeatherData.set(index, newCityWeatherData);
+            String cityName = newCityWeatherData.Name;
+            _allCityWeatherData.UpdateCityWeatherData(cityName, newCityWeatherData);
             SaveAllCititesWeatherToPref(); // XXX dont save for every query
         }
 
@@ -98,18 +99,11 @@ public class WeatherService extends Service implements WeatherQueryCallback {
     public class WeatherServiceBinder extends Binder{
 
         CityWeatherData getCurrentWeather(String cityName){
-            int index = GetIndexOfCity(cityName);
-
-            if(index == -1){
-                return null;
-            }
-            else{
-                return _allCityWeatherData._listOfCityWeatherData.get(index);
-            }
+            return _allCityWeatherData.GetCityWeatherData(cityName);
         };
 
-        ArrayList<CityWeatherData> getAllCitiesWeather(){
-            return _allCityWeatherData._listOfCityWeatherData;
+        AllCitiesWeather getAllCitiesWeather(){
+            return _allCityWeatherData;
         }
 
         void AddCity(String cityName) throws JSONException {
@@ -117,19 +111,13 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         }
 
         void RemoveCity(String cityName){
-            int index = GetIndexOfCity(cityName);
-            _allCityWeatherData._listOfCityWeatherData.remove(index);
+            _allCityWeatherData.RemoveCity(cityName);
+        }
 
+        void RefreshCityWeatherList() throws JSONException {
+            UpdateListOfCityWeatherData();
         }
     }
-
-    // class that contains a list of all CityWeatherData.
-    // It is used by Gson class to serialize and deserialize the entire object and then save it as a string in SharedPreference
-    public class AllCitiesWeather{
-        public ArrayList<CityWeatherData> _listOfCityWeatherData = new ArrayList<CityWeatherData>();
-    }
-
-
 
     private void GetAllCitiesWeatherFromPref() {
         SharedPreferences pref = getSharedPreferences(PREFERENCE, Context.MODE_PRIVATE);
@@ -157,10 +145,13 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
         String name, temp, humidity, description, icon, timestamp;
 
+        double kelvinTempVal = -273.15f;
+
         try{
             JSONObject jsonObject = new JSONObject(jsonString);
             name = jsonObject.getString("name");
-            temp = jsonObject.getJSONObject("main").getString("temp"); //Object inside object
+            double tmpTemp = jsonObject.getJSONObject("main").getDouble("temp") + kelvinTempVal; //Object inside object
+            temp = String.valueOf(round(tmpTemp));
             description = jsonObject.getJSONArray("weather").getJSONObject(0).getString("description");
             icon = jsonObject.getJSONArray("weather").getJSONObject(0).getString("icon");
             humidity = jsonObject.getJSONObject("main").getString("humidity");
@@ -171,7 +162,20 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         catch (JSONException jsonException) {
             jsonException.printStackTrace();
         }
+
         return null;
+    }
+
+    private void UpdateListOfCityWeatherData() throws JSONException {
+        int count = _allCityWeatherData.GetAllCitiesWeatherData().size();
+
+        Log.d("WeatherService", "UpdateListOfCityWeatherData, Forloop, number of cities: " + count);
+
+        for (int i = 0 ; i < count; i++){
+            String cityName = _allCityWeatherData.GetAllCitiesWeatherData().get(i).Name;
+            Log.d("WeatherService", "Forloop, i= " + i + ": Querying city: " + cityName);
+            weatherQueryHelper.Query(cityName, WeatherService.this);
+        }
     }
 
     Thread workerThread = new Thread() {
@@ -180,12 +184,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             try {
                 while(true) {
                     Thread.sleep(10000);
-
-                    int count = _allCityWeatherData._listOfCityWeatherData.size();
-                    for (int i = 0 ; i < count; i++){
-                        String cityName = _allCityWeatherData._listOfCityWeatherData.get(i).Name;
-                        weatherQueryHelper.Query(cityName, WeatherService.this);
-                    }
+                    UpdateListOfCityWeatherData();
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -194,17 +193,6 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             }
         }
     };
-
-    private int GetIndexOfCity(String cityName){
-        int count = _allCityWeatherData._listOfCityWeatherData.size();
-        for (int i = 0 ; i < count; i++){
-            String elemCityName = _allCityWeatherData._listOfCityWeatherData.get(i).Name;
-            if(elemCityName.equals(cityName)){
-                return i;
-            }
-        }
-        return -1; // returns -1 if city was not found
-    }
 
     private void Run() throws JSONException {
         workerThread.start();
