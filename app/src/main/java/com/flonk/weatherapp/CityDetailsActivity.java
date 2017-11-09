@@ -1,29 +1,41 @@
 package com.flonk.weatherapp;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 
 import java.lang.reflect.Method;
+
+import static com.flonk.weatherapp.Globals.NEW_WEATHER_DATA;
 
 public class CityDetailsActivity extends AppCompatActivity {
 
     Button buttonOK, buttonRemove;
     TextView textViewCityName, textViewHumidity, textViewWeatherDescription, textViewTemperature;
     ImageView imvIcon;
-    SharedPreferences sharedPreferences;
 
-    @Override
+    private WeatherService.WeatherServiceBinder weatherServiceBinder;
+    private boolean isBoundToWeatherService = false;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_city_details);
+
+        Intent bindServiceIntent = new Intent(this, WeatherService.class);
+        bindService(bindServiceIntent, serviceConnection, BIND_AUTO_CREATE);
+
 
         buttonOK = findViewById(R.id.buttonOK);
         buttonRemove = findViewById(R.id.buttonRemove);
@@ -47,7 +59,6 @@ public class CityDetailsActivity extends AppCompatActivity {
         buttonOK.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setResult(RESULT_OK);
                 finish();
             }
         });
@@ -55,12 +66,23 @@ public class CityDetailsActivity extends AppCompatActivity {
         buttonRemove.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setResult(RESULT_OK);
-                Method[] methods = CityListActivity.class.getDeclaredMethods();
-                //Remove based on City ID received from List Activity
+                finish();
             }
         });
     }
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            weatherServiceBinder = (WeatherService.WeatherServiceBinder) iBinder;
+            isBoundToWeatherService = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            isBoundToWeatherService = false;
+        }
+    };
 
     private int setIcon(String iconID){
         switch (iconID){

@@ -12,13 +12,15 @@
         android:id="@+id/tvTemperature"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:text="@string/tv_temperature"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintBottom_toBottomOf="@+id/tvPercentage"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.66"
-        app:layout_constraintStart_toEndOf="@+id/tvPercentage"
-        app:layout_constraintTop_toTopOf="@+id/tvPercentage" />
+        app:layout_constraintHorizontal_bias="0.85"
+        app:layout_constraintStart_toEndOf="@+id/imvIcon"
+        app:layout_constraintTop_toTopOf="@+id/tvPercentage"
+        android:layout_marginLeft="8dp" />
 
     <TextView
         android:id="@+id/tvCelsius"
@@ -71,7 +73,6 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.33"
         app:layout_constraintStart_toEndOf="@+id/imvIcon"
         app:layout_constraintTop_toBottomOf="@+id/tvCityName" />
 
@@ -79,12 +80,14 @@
         android:id="@+id/imvIcon"
         android:layout_width="wrap_content"
         android:layout_height="70dp"
+        android:layout_marginStart="8dp"
         android:contentDescription="@string/imv_weather_icon"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/tvCityName"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/ic_launcher_round" />
+        app:srcCompat="@mipmap/ic_launcher_round"
+        android:layout_marginLeft="8dp" />
 
 
 </android.support.constraint.ConstraintLayout>

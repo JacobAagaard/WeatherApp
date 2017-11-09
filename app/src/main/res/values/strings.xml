@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WeatherApp XX</string>
+    <string name="app_name">WeatherApp 16</string>
     <string name="tv_celsius">\u00B0C</string>
     <string name="tv_weather_description">Always Raining</string>
     <string name="tv_title_description">Description:</string>

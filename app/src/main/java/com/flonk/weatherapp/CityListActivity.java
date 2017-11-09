@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,26 +27,19 @@ import java.nio.channels.NotYetBoundException;
 
 import static com.flonk.weatherapp.Globals.NEW_WEATHER_DATA;
 
-
-// https://github.com/codepath/android_guides/wiki/Using-an-ArrayAdapter-with-ListView
-
 public class CityListActivity extends AppCompatActivity {
 
     private Button buttonAdd, buttonRefresh;
     private EditText editTextAdd;
     private ListView listViewCities;
-    private SharedPreferences sharedPreferences;
-    private String[] listItems = {};
-    final static String FILENAME = "StorageFile";
+
     private BroadcastReceiver broadcastReceiver;
+
     private WeatherService.WeatherServiceBinder weatherServiceBinder;
     private boolean isBoundToWeatherService = false;
-    private boolean mDownloading = false;
+
     private AllCitiesWeather allCitiesWeather;
     private CityWeatherDataAdapter cityWeatherDataAdapter;
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,10 +47,8 @@ public class CityListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_city_list);
 
         final Intent weatherServiceIntent = new Intent(CityListActivity.this, WeatherService.class);
-        startService(weatherServiceIntent);
+        //startService(weatherServiceIntent);
         bindService(weatherServiceIntent,mConnection, Context.BIND_AUTO_CREATE);
-
-        sharedPreferences = CityListActivity.this.getSharedPreferences(FILENAME , MODE_PRIVATE);
 
         listViewCities = findViewById(R.id.listViewCities);
         editTextAdd = findViewById(R.id.editTextAdd);
@@ -132,7 +122,6 @@ public class CityListActivity extends AppCompatActivity {
                 }
             }
         };
-
         registerReceiver(broadcastReceiver, filter);
     }
 
