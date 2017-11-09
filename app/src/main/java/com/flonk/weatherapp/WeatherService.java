@@ -12,7 +12,7 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
-import static com.flonk.weatherapp.Globals.WEATHER_QUERY_DATA;
+import static com.flonk.weatherapp.Globals.NEW_WEATHER_DATA;
 import static com.flonk.weatherapp.Globals.WEATHER_QUERY_RESULT_FILTER;
 import static java.lang.Math.round;
 
@@ -34,9 +34,14 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
         weatherQueryHelper = new WeatherQueryHelper(connectivityManager);
 
-        //workerThread.start();
+        workerThread.start();
 
         super.onCreate();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
     }
 
     public WeatherService() {
@@ -88,11 +93,9 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             SaveAllCititesWeatherToPref(); // XXX dont save for every query
         }
 
-        // broadcasts the new weather data to listeners
-        // intens cant hold custom classes, and Gson is used to convert it to a string (Json)
+        // broadcasts that new data is available
         Intent resultIntent = new Intent(WEATHER_QUERY_RESULT_FILTER);
-        Gson gson = new Gson();
-        resultIntent.putExtra(WEATHER_QUERY_DATA, gson.toJson(newCityWeatherData));
+        resultIntent.putExtra(NEW_WEATHER_DATA, newCityWeatherData.Name);
         sendBroadcast(resultIntent);
     }
 

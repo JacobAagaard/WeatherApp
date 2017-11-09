@@ -8,17 +8,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -29,11 +25,8 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 
 import java.nio.channels.NotYetBoundException;
-import java.util.ArrayList;
-import java.util.EmptyStackException;
-import java.util.List;
 
-import static com.flonk.weatherapp.Globals.WEATHER_QUERY_DATA;
+import static com.flonk.weatherapp.Globals.NEW_WEATHER_DATA;
 
 
 // https://github.com/codepath/android_guides/wiki/Using-an-ArrayAdapter-with-ListView
@@ -62,7 +55,7 @@ public class CityListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_city_list);
 
         final Intent weatherServiceIntent = new Intent(CityListActivity.this, WeatherService.class);
-        //startService(weatherServiceIntent);
+        startService(weatherServiceIntent);
         bindService(weatherServiceIntent,mConnection, Context.BIND_AUTO_CREATE);
 
         sharedPreferences = CityListActivity.this.getSharedPreferences(FILENAME , MODE_PRIVATE);
@@ -120,7 +113,7 @@ public class CityListActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Bundle weatherData;
-                String result = intent.getStringExtra(WEATHER_QUERY_DATA);
+                String result = intent.getStringExtra(NEW_WEATHER_DATA);
 
                 Gson gson = new Gson();
                 CityWeatherData newCityWeatherData = gson.fromJson(result, CityWeatherData.class);
