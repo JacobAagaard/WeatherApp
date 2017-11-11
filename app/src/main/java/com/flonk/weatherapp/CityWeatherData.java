@@ -12,7 +12,7 @@ public class CityWeatherData {
     public String Description;
     public String Icon;
     public String TimeStamp;
-    public boolean ChangeIcon = false;
+    public boolean isSubscribed = false;
 
     public CityWeatherData(String name, String temp, String humidity, String description, String icon, String timeStamp){
         Name = name;

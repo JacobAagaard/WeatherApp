@@ -96,6 +96,8 @@
         android:id="@+id/imvNewData"
         android:layout_width="54dp"
         android:layout_height="44dp"
+        android:clickable="true"
+        android:contextClickable="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.951"
         app:layout_constraintLeft_toLeftOf="parent"

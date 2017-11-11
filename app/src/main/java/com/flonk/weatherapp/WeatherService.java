@@ -97,11 +97,11 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
         if (!_allCityWeatherData.CityExists(newCityWeatherData.Name)) {
             _allCityWeatherData.AddCity(newCityWeatherData);
-            SaveAllCititesWeatherToPref(); // XXX: dont save for every query
+            SaveAllCititesWeatherToPref(); // TODO: dont save for every query
         } else {
             String cityName = newCityWeatherData.Name;
             _allCityWeatherData.UpdateCityWeatherData(cityName, newCityWeatherData);
-            SaveAllCititesWeatherToPref(); // XXX dont save for every query
+            SaveAllCititesWeatherToPref(); // TODO: dont save for every query
         }
 
         // broadcasts that new data is available
@@ -130,6 +130,15 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
         void RefreshCityWeatherList() throws JSONException {
             UpdateListOfCityWeatherData();
+        }
+
+        void SetSubscribedCity(int i){
+            if(_allCityWeatherData.SetSubscribedCity(i)){
+                CreateNotification(_allCityWeatherData.GetAllCitiesWeatherData().get(i).Name);
+            }
+            else{
+                notificationManager.cancel(notificationId);
+            }
         }
     }
 
@@ -201,13 +210,13 @@ public class WeatherService extends Service implements WeatherQueryCallback {
                     Log.d("WeatherService", "Calling UpdateListOfCityWeatherData, containing " + _allCityWeatherData.GetAllCitiesWeatherData().size() + " cities");
                     UpdateListOfCityWeatherData();
 
-                    if(_allCityWeatherData.GetAllCitiesWeatherData().size() > 0){
-                        CreateNotification(_allCityWeatherData.GetAllCitiesWeatherData().get(0).Name);
+                    int index = _allCityWeatherData.GetSubscribedCity();
+                    if(index != -1){
+                        CreateNotification(_allCityWeatherData.GetAllCitiesWeatherData().get(index).Name);
                     }
                     else{
                         notificationManager.cancel(notificationId);
                     }
-
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -225,9 +234,9 @@ public class WeatherService extends Service implements WeatherQueryCallback {
     private void CreateNotification(String cityName){
 
         Notification.Builder builder = new Notification.Builder(this)
-                .setContentTitle("TestTitle")
-                .setContentText("TestMessage")
-                .setSmallIcon(R.mipmap.ic_launcher);
+                .setContentTitle(cityName)
+                .setContentText(_allCityWeatherData.GetCityWeatherData(cityName).Description)
+                .setSmallIcon(R.mipmap.ic_launcher_round);
 
         // we need to build a basic notification first, then update it
         Intent intent = new Intent(this, CityDetailsActivity.class);

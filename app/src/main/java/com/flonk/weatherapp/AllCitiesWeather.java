@@ -10,6 +10,8 @@ import java.util.ArrayList;
 // It is used by Gson class to serialize and deserialize the entire object and then save it as a string in SharedPreference
 public class AllCitiesWeather{
     private ArrayList<CityWeatherData> _listOfCityWeatherData;
+    private int subscribedCity = -1;
+
 
     public AllCitiesWeather(){
         _listOfCityWeatherData = new ArrayList<CityWeatherData>();
@@ -72,5 +74,24 @@ public class AllCitiesWeather{
             }
         }
         return -1; // returns -1 if city was not found
+    }
+
+    public int GetSubscribedCity(){
+        return subscribedCity;
+    }
+
+    public boolean SetSubscribedCity(int index){
+        if(-1 == index) {
+
+         return false;
+        }
+        if(index == subscribedCity){
+            subscribedCity = -1;
+            _listOfCityWeatherData.get(index).isSubscribed = false;
+            return false;
+        }
+        subscribedCity = index;
+        _listOfCityWeatherData.get(index).isSubscribed = true;
+        return true;
     }
 }

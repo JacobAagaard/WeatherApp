@@ -1,6 +1,7 @@
 package com.flonk.weatherapp;
 
 import android.content.Context;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -18,23 +19,19 @@ import java.util.ArrayList;
  * Inspired by https://github.com/codepath/android_guides/wiki/Using-an-ArrayAdapter-with-ListView
  */
 
+
 public class CityWeatherDataAdapter extends ArrayAdapter<CityWeatherData> {
-    public CityWeatherDataAdapter(@NonNull Context context, int resource, @NonNull ArrayList<CityWeatherData> objects) {
+    private DataFromAdapter _callback;
+
+    public CityWeatherDataAdapter(@NonNull Context context, int resource, @NonNull ArrayList<CityWeatherData> objects, DataFromAdapter callback) {
         super(context, resource, objects);
+        _callback = callback;
     }
-
-    @Override
-    public void addAll(CityWeatherData... items) {
-
-        notifyDataSetChanged(); // Notifies UI thread that content has changed
-        super.addAll(items);
-    }
-
 
     @NonNull
     @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        CityWeatherData cityWeatherData = getItem(position);
+    public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        final CityWeatherData cityWeatherData = getItem(position);
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.row, parent, false);
         }
@@ -42,12 +39,23 @@ public class CityWeatherDataAdapter extends ArrayAdapter<CityWeatherData> {
         TextView tvCityName = convertView.findViewById(R.id.tvCityName);
         TextView tvTemperature = convertView.findViewById(R.id.tvTemperature);
         TextView tvHumidity = convertView.findViewById(R.id.tvHumidity);
-        ImageView imvIcon = convertView.findViewById(R.id.imvIcon);
-        ImageView imvNewData = convertView.findViewById(R.id.imvNewData);
+        final ImageView imvIcon = convertView.findViewById(R.id.imvIcon);
+        final ImageView imvNewData = convertView.findViewById(R.id.imvNewData);
 
         if(cityWeatherData != null){
-            if (cityWeatherData.ChangeIcon)
-                imvNewData.setImageResource(R.mipmap.ic_launcher);
+            imvNewData.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (cityWeatherData.isSubscribed) {
+                        imvNewData.setImageResource(R.mipmap.ic_launcher_foreground);
+                        _callback.SendItemPosition(position);
+                    }
+                    else{
+                        imvNewData.setImageResource(R.mipmap.ic_launcher_round);
+                        _callback.SendItemPosition(position);
+                    }
+                }
+            });
             // Populate the data into the template view using the data object
             tvCityName.setText(cityWeatherData.Name);
             tvTemperature.setText(cityWeatherData.Temperature);

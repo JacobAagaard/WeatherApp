@@ -29,7 +29,7 @@ import static com.flonk.weatherapp.Globals.CITY_WEATHER_NAME;
 import static com.flonk.weatherapp.Globals.REQUEST_CODE_DETAILS;
 import static com.flonk.weatherapp.Globals.RESULT_CODE_REMOVE;
 
-public class CityListActivity extends AppCompatActivity {
+public class CityListActivity extends AppCompatActivity implements DataFromAdapter{
 
     private Button buttonAdd, buttonRefresh;
     private EditText editTextAdd;
@@ -141,18 +141,11 @@ public class CityListActivity extends AppCompatActivity {
                     break;
                 case RESULT_OK:
                     allCitiesWeather = weatherServiceBinder.getAllCitiesWeather();
-                    CityWeatherData cityWeatherData = allCitiesWeather.GetCityWeatherData(data.getStringExtra(CITY_WEATHER_NAME));
-                    cityWeatherData.ChangeIcon = true;
-                    cityWeatherDataAdapter.notifyDataSetChanged();
+                    allCitiesWeather.SetSubscribedCity(allCitiesWeather.GetSubscribedCity());
                     break;
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
     }
 
     @Override
@@ -219,7 +212,7 @@ public class CityListActivity extends AppCompatActivity {
         allCitiesWeather = new AllCitiesWeather(weatherServiceBinder.getAllCitiesWeather().GetAllCitiesWeatherData());
 
         cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
-                0, allCitiesWeather.GetAllCitiesWeatherData());
+                0, allCitiesWeather.GetAllCitiesWeatherData(), this);
         listViewCities.setAdapter(cityWeatherDataAdapter);
     }
 
@@ -234,4 +227,8 @@ public class CityListActivity extends AppCompatActivity {
         return false;
     }
 
+    @Override
+    public void SendItemPosition(int i) {
+        weatherServiceBinder.SetSubscribedCity(i);
+        }
 }
