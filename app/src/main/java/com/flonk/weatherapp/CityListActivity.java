@@ -8,9 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -83,7 +83,6 @@ public class CityListActivity extends AppCompatActivity{
             }
         });
 
-        // when clicking on one of the items in the lists, it starts the detailed view
         listViewCities.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -91,17 +90,16 @@ public class CityListActivity extends AppCompatActivity{
             }
         });
 
-        // specifies the filter that catches the new result message from the service
         IntentFilter filter = new IntentFilter(Globals.WEATHER_QUERY_RESULT_FILTER);
 
-        // Defines the broadcast reciever for listening on new data from the server
+        //Retrieve new data from Weather Service
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String cityName = intent.getStringExtra(CITY_WEATHER_NAME);
                 CityWeatherData newCityWeatherData = weatherServiceBinder.getCurrentWeather(cityName);
 
-                Log.d("WeatherApp", "broadcastReciever: newcityData from: " + cityName);
+                Log.d("CityListActivity", "broadcastReciever: newcityData from: " + cityName);
 
                 if(allCitiesWeather.CityExists(cityName)){
                     allCitiesWeather.UpdateCityWeatherData(cityName, newCityWeatherData);
@@ -121,10 +119,10 @@ public class CityListActivity extends AppCompatActivity{
 
         if(!isMyServiceRunning(WeatherService.class)){
             startService(weatherServiceIntent);
-            Log.d("WeatherApp", "Service was not already running!");
+            Log.d("CityListActivity", "Service was not already running!");
         }
         else{
-            Log.d("WeatherApp", "Service was already running!");
+            Log.d("CityListActivity", "Service was already running!");
         }
         // binds to the service
         bindService(weatherServiceIntent,mConnection, Context.BIND_AUTO_CREATE);
@@ -141,17 +139,22 @@ public class CityListActivity extends AppCompatActivity{
             try{
                 unbindService(mConnection);
             } catch (Exception e){
-                Log.d("WeatherApp", e.getMessage());
+                Log.d("CityListsActivity", e.getMessage());
             }
         }
         if(broadcastReceiver != null){
-            try {
-                unregisterReceiver(broadcastReceiver);
-            } catch (Exception e){
-                Log.d("WeatherApp", "onPause in CityListActivity: " + e.getMessage());
-            }
+            unregisterReceiver(broadcastReceiver);
         }
         super.onPause();
+    }
+
+
+    private void refreshList() throws JSONException {
+        Toast.makeText(this, "Refreshing list...", Toast.LENGTH_SHORT).show();
+
+        if(isBoundToWeatherService){
+            weatherServiceBinder.RefreshCityWeatherList();
+        }
     }
 
     private void startCityDetailsActivity(int position) {
@@ -159,18 +162,14 @@ public class CityListActivity extends AppCompatActivity{
 
         Intent startCityDetailsIntent = new Intent(getApplicationContext(), CityDetailsActivity.class);
         startCityDetailsIntent.putExtra(CITY_WEATHER_NAME, currentData.Name);
-        startActivity(startCityDetailsIntent);
+        startActivityForResult(startCityDetailsIntent, REQUEST_CODE_DETAILS);
     }
 
     private ServiceConnection mConnection= new ServiceConnection(){
 
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            // gets the binder from the service
             weatherServiceBinder = (WeatherService.WeatherServiceBinder) iBinder;
-
-            // updates the local copy of all the city data
-            allCitiesWeather = new AllCitiesWeather(weatherServiceBinder.getAllCitiesWeather().GetAllCitiesWeatherData());
 
             isBoundToWeatherService = true;
             setupMyCrazyAdapterArrayList();
@@ -182,17 +181,15 @@ public class CityListActivity extends AppCompatActivity{
         }
     };
 
-    // used to setup the adaptor for the listview
     private void setupMyCrazyAdapterArrayList() {
-        // defines the adaptor for the listview
+        allCitiesWeather = new AllCitiesWeather(weatherServiceBinder.getAllCitiesWeather().GetAllCitiesWeatherData());
+
         cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
                 0, allCitiesWeather.GetAllCitiesWeatherData());
-        // sets the adaptor
         listViewCities.setAdapter(cityWeatherDataAdapter);
     }
 
     // from : https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android
-    // used to check whether the service is already running
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -201,17 +198,5 @@ public class CityListActivity extends AppCompatActivity{
             }
         }
         return false;
-    }
-
-    //Inspired by: https://stackoverflow.com/questions/1109022/close-hide-the-android-soft-keyboard
-    public static void hideKeyboard(Activity activity) {
-        InputMethodManager imm = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
-        //Find the currently focused view, so we can grab the correct window token from it.
-        View view = activity.getCurrentFocus();
-        //If no view currently has focus, create a new one, just so we can grab a window token from it
-        if (view == null) {
-            view = new View(activity);
-        }
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 }
