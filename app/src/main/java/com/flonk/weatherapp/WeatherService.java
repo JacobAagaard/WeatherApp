@@ -4,9 +4,12 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.os.Binder;
 import android.os.IBinder;
@@ -16,7 +19,10 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Calendar;
+
 import static com.flonk.weatherapp.Globals.CITY_WEATHER_NAME;
+import static com.flonk.weatherapp.Globals.DEGREE_SIGN;
 import static com.flonk.weatherapp.Globals.WEATHER_QUERY_RESULT_FILTER;
 import static java.lang.Math.round;
 
@@ -29,15 +35,21 @@ public class WeatherService extends Service implements WeatherQueryCallback {
     private WeatherQueryHelper weatherQueryHelper;
     private int notificationId = 1234;
     private NotificationManager notificationManager;
+    private BroadcastReceiver timerReciever;
+    private IntentFilter timerFilter;
 
 
     @Override
     public void onCreate() {
+        Log.d("WeatherService","OnCreate was called!");
 
-        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
+        // retrieves all the saved Cities
         GetAllCitiesWeatherFromPref();
 
+        // sets up the notification manager
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // is used by the download task to check if the connection is ok
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -49,11 +61,51 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             e.printStackTrace();
         }
 
+
+        timerFilter = new IntentFilter();
+        timerFilter.addAction(Intent.ACTION_TIME_TICK);
+        timerFilter.addAction(Intent.ACTION_TIME_CHANGED);
+
+        timerReciever = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+
+                if (action.equals(Intent.ACTION_TIME_CHANGED) || action.equals(Intent.ACTION_TIME_TICK))
+                {
+                    CityWeatherData cityData = _allCityWeatherData.GetSubscribedCity();
+
+                    if(!(cityData == null)){
+                        Calendar calendar = Calendar.getInstance();
+                        String citySceduledTime = cityData.scheduledNotificationTime;
+                        String currentTime = String.valueOf(calendar.get(Calendar.HOUR_OF_DAY) + String.valueOf(calendar.get(Calendar.MINUTE)));
+
+
+                        if(citySceduledTime.equals(currentTime)){
+                            Log.d("WeatherService", "TimerReciever: Creating Notification!");
+                            CreateNotification(cityData);
+                        }
+                    }
+
+                }
+            }
+        };
+
+        if (!(_allCityWeatherData.GetSubscribedCity() == null)){
+            try{
+                registerReceiver(timerReciever, timerFilter);
+                Log.d("WeatherService", "TimerReciever Registered");
+            } catch (Exception e){
+                Log.d("WeatherService", e.getMessage());
+            }
+        }
+
         super.onCreate();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("WeatherService","OnStartCommand was called!");
         return START_STICKY;
     }
 
@@ -126,19 +178,41 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
         void RemoveCity(String cityName){
             _allCityWeatherData.RemoveCity(cityName);
+            SaveAllCititesWeatherToPref();
         }
 
         void RefreshCityWeatherList() throws JSONException {
             UpdateListOfCityWeatherData();
+            SaveAllCititesWeatherToPref();
         }
 
-        void SetSubscribedCity(int i){
-            if(_allCityWeatherData.SetSubscribedCity(i)){
-                CreateNotification(_allCityWeatherData.GetAllCitiesWeatherData().get(i).Name);
+        void SubscribedCity(String cityName){
+            _allCityWeatherData.SubscribedCity(cityName);
+            SaveAllCititesWeatherToPref();
+            Log.d("WeatherService", "SubscribeedCity: registering broadcastReciever!");
+            try {
+                registerReceiver(timerReciever, timerFilter);
             }
-            else{
-                notificationManager.cancel(notificationId);
+            catch (Exception e){
+                Log.d("WeatherService", "exception: " + e.getMessage());
             }
+        }
+
+        void UnSubscribeCity(String name){
+            _allCityWeatherData.UnSubScribeCity(name);
+            SaveAllCititesWeatherToPref();
+            notificationManager.cancel(notificationId);
+            Log.d("WeatherService", "SubscribeedCity: Unregistering broadcastReciever!");
+            try {
+                unregisterReceiver(timerReciever);
+            } catch (Exception e)
+            {
+                Log.d("WeatherService", "exception: " + e.getMessage());
+            }
+        }
+
+        void UpdateACityData(CityWeatherData cityData){
+            _allCityWeatherData.UpdateCityWeatherData(cityData.Name, cityData);
         }
     }
 
@@ -207,20 +281,14 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             try {
                 while(true) {
                     Thread.sleep(5000);
-                    Log.d("WeatherService", "Calling UpdateListOfCityWeatherData, containing " + _allCityWeatherData.GetAllCitiesWeatherData().size() + " cities");
-                    UpdateListOfCityWeatherData();
+                    for(int i = 0; i < _allCityWeatherData.GetAllCitiesWeatherData().size(); i++){
+                        CityWeatherData cityData = _allCityWeatherData.GetAllCitiesWeatherData().get(i);
+                        Log.d("WeatherService", cityData.Name + cityData.isSubscribed + cityData.scheduledNotificationTime);
+                    }
 
-                    int index = _allCityWeatherData.GetSubscribedCity();
-                    if(index != -1){
-                        CreateNotification(_allCityWeatherData.GetAllCitiesWeatherData().get(index).Name);
-                    }
-                    else{
-                        notificationManager.cancel(notificationId);
-                    }
+                    //UpdateListOfCityWeatherData();
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
@@ -231,20 +299,23 @@ public class WeatherService extends Service implements WeatherQueryCallback {
     }
 
     // inspiration from: https://stackoverflow.com/questions/15758980/android-service-needs-to-run-always-never-pause-or-stop
-    private void CreateNotification(String cityName){
+    private void CreateNotification(CityWeatherData cityData){
+
 
         Notification.Builder builder = new Notification.Builder(this)
-                .setContentTitle(cityName)
-                .setContentText(_allCityWeatherData.GetCityWeatherData(cityName).Description)
+                .setContentTitle(cityData.Name)
+                .setContentText(cityData.Description + ", " + cityData.Temperature + DEGREE_SIGN + "C")
+                //.setLargeIcon(BitmapFactory.decodeResource(this.getResources(), Util.GetIconId(cityData.Icon)))
                 .setSmallIcon(R.mipmap.ic_launcher_round);
 
         // we need to build a basic notification first, then update it
         Intent intent = new Intent(this, CityDetailsActivity.class);
-        intent.putExtra(Globals.CITY_WEATHER_NAME, cityName);
+        Log.d("WeatherService", "Creating a notification for city: " + cityData.Name + " isSubscribed: " + cityData.isSubscribed);
+        intent.putExtra(Globals.CITY_WEATHER_NAME, cityData.Name);
+        intent.setAction("dummyAction"); // needs to be set for the extras to not go away when using FLAG_ONE_SHOT. Source: https://stackoverflow.com/questions/3127957/why-the-pendingintent-doesnt-send-back-my-custom-extras-setup-for-the-intent
         intent.putExtra(Globals.CITY_DETAIL_ACTIVITY_STARTED_FROM_SERVICE, true);
-        //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-        PendingIntent pendIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
 
         builder.setContentIntent(pendIntent);
 

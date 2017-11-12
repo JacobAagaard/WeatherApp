@@ -21,48 +21,35 @@ import java.util.ArrayList;
 
 
 public class CityWeatherDataAdapter extends ArrayAdapter<CityWeatherData> {
-    private DataFromAdapter _callback;
 
-    public CityWeatherDataAdapter(@NonNull Context context, int resource, @NonNull ArrayList<CityWeatherData> objects, DataFromAdapter callback) {
+    public CityWeatherDataAdapter(@NonNull Context context, int resource, @NonNull ArrayList<CityWeatherData> objects) {
         super(context, resource, objects);
-        _callback = callback;
     }
 
     @NonNull
     @Override
     public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         final CityWeatherData cityWeatherData = getItem(position);
+
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.row, parent, false);
         }
+
         // Lookup view for data population
         TextView tvCityName = convertView.findViewById(R.id.tvCityName);
         TextView tvTemperature = convertView.findViewById(R.id.tvTemperature);
         TextView tvHumidity = convertView.findViewById(R.id.tvHumidity);
         final ImageView imvIcon = convertView.findViewById(R.id.imvIcon);
-        final ImageView imvNewData = convertView.findViewById(R.id.imvNewData);
+
 
         if(cityWeatherData != null){
-            imvNewData.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (cityWeatherData.isSubscribed) {
-                        imvNewData.setImageResource(R.mipmap.ic_launcher_foreground);
-                        _callback.SendItemPosition(position);
-                    }
-                    else{
-                        imvNewData.setImageResource(R.mipmap.ic_launcher_round);
-                        _callback.SendItemPosition(position);
-                    }
-                }
-            });
             // Populate the data into the template view using the data object
             tvCityName.setText(cityWeatherData.Name);
             tvTemperature.setText(cityWeatherData.Temperature);
             tvHumidity.setText(cityWeatherData.Humidity);
             //set imageView based on description
             imvIcon.setImageResource(setIcon(cityWeatherData.Icon));
-            notifyDataSetChanged(); // Notifies UI thread that content has changed
+            //notifyDataSetChanged(); // Notifies UI thread that content has changed
         }
         else
             Toast.makeText(getContext(), "object is null", Toast.LENGTH_SHORT).show();

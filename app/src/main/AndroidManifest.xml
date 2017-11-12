@@ -12,8 +12,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".CityListActivity"
-            android:launchMode="singleInstance"
+            android:name=".CityListActivity">
+            <!--android:launchMode="singleInstance"-->
             android:windowSoftInputMode="stateAlwaysHidden"> <!-- Hides keyboard on app startup -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,7 +21,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".CityDetailsActivity" android:launchMode="singleInstance" android:noHistory="true"/>
+        <activity android:name=".CityDetailsActivity"
+            android:noHistory="true">
+            <!--android:launchMode="singleInstance"-->
+        </activity>
 
         <service
             android:name=".WeatherService"

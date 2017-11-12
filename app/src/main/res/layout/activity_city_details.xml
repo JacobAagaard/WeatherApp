@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/cityDetailActivityConstrainedLayout"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cityDetailActivityConstrainedLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.flonk.weatherapp.CityDetailsActivity">
+    tools:context="com.flonk.weatherapp.CityDetailsActivity"
+    tools:layout_editor_absoluteY="81dp">
 
     <ImageView
         android:id="@+id/imvIcon"
@@ -14,137 +15,141 @@
         android:layout_marginTop="4dp"
         android:contentDescription="@string/imv_weather_icon"
         android:cropToPadding="false"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewCityName"
-        app:layout_constraintVertical_bias="0.0"
         app:srcCompat="@mipmap/ic_launcher_round" />
 
     <TextView
         android:id="@+id/textViewCityName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
         android:text="@string/tv_cityname"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.503"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.011" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textViewHumidity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="2dp"
         android:gravity="end"
         android:text="@string/tv_humidty"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.141"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.46" />
+        app:layout_constraintBaseline_toBaselineOf="@+id/textViewPercentage"
+        app:layout_constraintEnd_toStartOf="@+id/textViewPercentage"
+        android:layout_marginRight="2dp" />
 
     <TextView
         android:id="@+id/textViewPercentage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="2dp"
+        android:layout_marginTop="27dp"
         android:text="@string/tv_percentage"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
-        app:layout_constraintBaseline_toBaselineOf="@+id/textViewHumidity"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/textViewHumidity"
-        android:layout_marginRight="8dp"
-        android:layout_marginLeft="2dp" />
+        app:layout_constraintEnd_toStartOf="@+id/imvIcon"
+        app:layout_constraintStart_toStartOf="@+id/imvIcon"
+        app:layout_constraintTop_toBottomOf="@+id/imvIcon" />
 
     <TextView
         android:id="@+id/textViewTemperature"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="2dp"
+        android:layout_marginTop="27dp"
         android:gravity="end"
         android:text="@string/tv_temperature"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.8"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.46" />
+        app:layout_constraintEnd_toStartOf="@+id/textViewCelsius"
+        app:layout_constraintTop_toBottomOf="@+id/imvIcon"
+        android:layout_marginRight="2dp" />
 
     <TextView
         android:id="@+id/textViewCelsius"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="2dp"
+        android:layout_marginEnd="26dp"
         android:text="@string/tv_celsius"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         app:layout_constraintBaseline_toBaselineOf="@+id/textViewTemperature"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/textViewTemperature"
-        android:layout_marginRight="8dp"
-        android:layout_marginLeft="2dp" />
+        android:layout_marginRight="26dp" />
 
     <Button
         android:id="@+id/buttonOK"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="44dp"
         android:text="@string/btn_ok"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.85"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.965" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginRight="44dp" />
 
     <Button
         android:id="@+id/buttonRemove"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginStart="45dp"
         android:text="@string/btn_remove"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.15"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.965" />
+        android:layout_marginLeft="45dp" />
 
     <TextView
         android:id="@+id/textViewDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="162dp"
+        android:layout_marginStart="45dp"
         android:text="@string/tv_title_description"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.711" />
+        android:layout_marginLeft="45dp" />
 
     <TextView
         android:id="@+id/textViewWeatherDescription"
         android:layout_width="120dp"
         android:layout_height="65dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginBottom="33dp"
+        android:layout_marginTop="30dp"
         android:isScrollContainer="false"
         android:text="@string/tv_weather_description"
         android:textAllCaps="true"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintBottom_toTopOf="@+id/buttonRemove"
         app:layout_constraintStart_toStartOf="@+id/textViewDescription"
-        app:layout_constraintTop_toBottomOf="@+id/textViewDescription"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toTopOf="@+id/textViewDescription" />
+
+    <ToggleButton
+        android:id="@+id/toggleButtonSubscription"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginBottom="114dp"
+        android:text="ToggleButton"
+        android:textOff="@string/OFF"
+        android:textOn="@string/ON"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/textView"
+        app:layout_constraintStart_toStartOf="@+id/textView" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="105dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="2dp"
+        android:layout_marginEnd="23dp"
+        android:layout_marginTop="4dp"
+        android:text="@string/Subscribe"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toTopOf="@+id/toggleButtonSubscription"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textViewDescription"
+        android:layout_marginRight="23dp" />
 
 </android.support.constraint.ConstraintLayout>

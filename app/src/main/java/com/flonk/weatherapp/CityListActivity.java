@@ -19,27 +19,21 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
-
 import org.json.JSONException;
-
 import java.nio.channels.NotYetBoundException;
-
 import static com.flonk.weatherapp.Globals.CITY_WEATHER_NAME;
-
 import static com.flonk.weatherapp.Globals.REQUEST_CODE_DETAILS;
 import static com.flonk.weatherapp.Globals.RESULT_CODE_REMOVE;
 
-public class CityListActivity extends AppCompatActivity implements DataFromAdapter{
+public class CityListActivity extends AppCompatActivity{
 
     private Button buttonAdd, buttonRefresh;
     private EditText editTextAdd;
     private ListView listViewCities;
-
     private BroadcastReceiver broadcastReceiver;
     private IntentFilter filter = new IntentFilter(Globals.WEATHER_QUERY_RESULT_FILTER);
     private WeatherService.WeatherServiceBinder weatherServiceBinder;
     private boolean isBoundToWeatherService = false;
-
     private AllCitiesWeather allCitiesWeather;
     private CityWeatherDataAdapter cityWeatherDataAdapter;
 
@@ -48,6 +42,7 @@ public class CityListActivity extends AppCompatActivity implements DataFromAdapt
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_city_list);
 
+        // sets up all the UI views
         listViewCities = findViewById(R.id.listViewCities);
         editTextAdd = findViewById(R.id.editTextAdd);
         buttonRefresh = findViewById(R.id.buttonRefresh);
@@ -62,6 +57,7 @@ public class CityListActivity extends AppCompatActivity implements DataFromAdapt
                     String enteredCityName = editTextAdd.getText().toString().trim();
                     hideKeyboard(CityListActivity.this);
 
+                    // when bound, it calls the method AddCity on the service.
                     if(isBoundToWeatherService){
                         try {
                             weatherServiceBinder.AddCity(enteredCityName);
@@ -80,7 +76,9 @@ public class CityListActivity extends AppCompatActivity implements DataFromAdapt
             @Override
             public void onClick(View v) {
                 try {
-                    refreshList();
+                    if(isBoundToWeatherService){
+                        weatherServiceBinder.RefreshCityWeatherList();
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -110,8 +108,6 @@ public class CityListActivity extends AppCompatActivity implements DataFromAdapt
                     cityWeatherDataAdapter.notifyDataSetChanged();
                 }
                 else{
-                    allCitiesWeather.AddCity(newCityWeatherData);
-                    cityWeatherDataAdapter.add(newCityWeatherData);
                     cityWeatherDataAdapter.notifyDataSetChanged();
                 }
             }
@@ -141,7 +137,6 @@ public class CityListActivity extends AppCompatActivity implements DataFromAdapt
                     break;
                 case RESULT_OK:
                     allCitiesWeather = weatherServiceBinder.getAllCitiesWeather();
-                    allCitiesWeather.SetSubscribedCity(allCitiesWeather.GetSubscribedCity());
                     break;
             }
         }
@@ -168,13 +163,18 @@ public class CityListActivity extends AppCompatActivity implements DataFromAdapt
     @Override
     protected void onPause() {
         if(isBoundToWeatherService){
-            unbindService(mConnection);
+            try{
+                unbindService(mConnection);
+            } catch (Exception e){
+                Log.d("CityListsActivity", e.getMessage());
+            }
         }
         if(broadcastReceiver != null){
             unregisterReceiver(broadcastReceiver);
         }
         super.onPause();
     }
+
 
     private void refreshList() throws JSONException {
         Toast.makeText(this, "Refreshing list...", Toast.LENGTH_SHORT).show();
@@ -212,7 +212,7 @@ public class CityListActivity extends AppCompatActivity implements DataFromAdapt
         allCitiesWeather = new AllCitiesWeather(weatherServiceBinder.getAllCitiesWeather().GetAllCitiesWeatherData());
 
         cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
-                0, allCitiesWeather.GetAllCitiesWeatherData(), this);
+                0, allCitiesWeather.GetAllCitiesWeatherData());
         listViewCities.setAdapter(cityWeatherDataAdapter);
     }
 
@@ -226,9 +226,4 @@ public class CityListActivity extends AppCompatActivity implements DataFromAdapt
         }
         return false;
     }
-
-    @Override
-    public void SendItemPosition(int i) {
-        weatherServiceBinder.SetSubscribedCity(i);
-        }
 }

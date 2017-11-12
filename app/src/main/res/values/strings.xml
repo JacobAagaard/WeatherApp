@@ -13,4 +13,8 @@
     <string name="imv_weather_icon">WeatherDescriptionIcon</string>
     <string name="tv_temperature">25.0</string>
     <string name="et_add_city_hint">Add City &#8230;</string>
+    <string name="Subscribe">Subscribe</string>
+    <string name="ON">ON</string>
+    <string name="OFF">OFF</string>
+
 </resources>

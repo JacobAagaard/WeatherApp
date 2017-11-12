@@ -9,9 +9,8 @@ import java.util.ArrayList;
 // class that contains a list of all CityWeatherData.
 // It is used by Gson class to serialize and deserialize the entire object and then save it as a string in SharedPreference
 public class AllCitiesWeather{
+    // lists of all cities
     private ArrayList<CityWeatherData> _listOfCityWeatherData;
-    private int subscribedCity = -1;
-
 
     public AllCitiesWeather(){
         _listOfCityWeatherData = new ArrayList<CityWeatherData>();
@@ -24,6 +23,7 @@ public class AllCitiesWeather{
     public void AddCity(CityWeatherData data){
         _listOfCityWeatherData.add(data);
     }
+
 
     public boolean RemoveCity(String cityName){
         int index = GetIndexOfCity(cityName);
@@ -43,10 +43,21 @@ public class AllCitiesWeather{
         if(index == -1){
             return false;
         }
+
+        // retrieves the old state of the cityData
+        CityWeatherData oldCity = _listOfCityWeatherData.get(index);
+
+        // sets the the element with new cityData (this only contains new weather data and not the state in terms of subscription)
         _listOfCityWeatherData.set(index, data);
+
+        // Sets the state if the cityData with the old state
+        _listOfCityWeatherData.get(index).scheduledNotificationTime = oldCity.scheduledNotificationTime;
+        _listOfCityWeatherData.get(index).isSubscribed = oldCity.isSubscribed;
+
         return true;
     }
 
+    // gets city weather data for the specified cityName
     public CityWeatherData GetCityWeatherData(String cityName){
         int index = GetIndexOfCity(cityName);
 
@@ -55,6 +66,7 @@ public class AllCitiesWeather{
         return _listOfCityWeatherData.get(index);
     }
 
+    // returns the entire list of cities
     public ArrayList<CityWeatherData> GetAllCitiesWeatherData(){
         return _listOfCityWeatherData;
     }
@@ -64,6 +76,7 @@ public class AllCitiesWeather{
         return true;
     }
 
+    // returns the index of the specified city
     private int GetIndexOfCity(String cityName){
         int count = _listOfCityWeatherData.size();
 
@@ -76,22 +89,26 @@ public class AllCitiesWeather{
         return -1; // returns -1 if city was not found
     }
 
-    public int GetSubscribedCity(){
-        return subscribedCity;
+    // returns the CityWeatherData that is subscribed
+    // OBS: as for now, this functionality is implemented, so that only one city can be subscribed on, hence the no-parameter.
+    public CityWeatherData GetSubscribedCity(){
+        for (int i = 0; i < _listOfCityWeatherData.size() ; i++){
+            CityWeatherData cityData = _listOfCityWeatherData.get(i);
+            if(cityData.isSubscribed) return cityData;
+        }
+        return null;
     }
 
-    public boolean SetSubscribedCity(int index){
-        if(-1 == index) {
+    // subscribes the specified city.
+    public void SubscribedCity(String cityName){
+        CityWeatherData cityData = _listOfCityWeatherData.get(GetIndexOfCity(cityName));
+        cityData.isSubscribed = true;
+    }
 
-         return false;
-        }
-        if(index == subscribedCity){
-            subscribedCity = -1;
-            _listOfCityWeatherData.get(index).isSubscribed = false;
-            return false;
-        }
-        subscribedCity = index;
-        _listOfCityWeatherData.get(index).isSubscribed = true;
-        return true;
+    // unsubscribes the specified city
+    public void UnSubScribeCity(String name){
+        CityWeatherData cityData = _listOfCityWeatherData.get(GetIndexOfCity(name));
+        cityData.isSubscribed = false;
+        cityData.scheduledNotificationTime = null;
     }
 }
