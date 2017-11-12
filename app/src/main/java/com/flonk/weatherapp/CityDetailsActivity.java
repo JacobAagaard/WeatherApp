@@ -6,9 +6,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -17,8 +17,8 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+
 import java.util.Calendar;
-import static com.flonk.weatherapp.Globals.RESULT_CODE_REMOVE;
 
 public class CityDetailsActivity extends AppCompatActivity {
 
@@ -123,7 +123,6 @@ public class CityDetailsActivity extends AppCompatActivity {
                     weatherServiceBinder.UnSubscribeCity(cityData.Name);
                 }
 
-
                 // retrieves the chosen time by the user
                 String chosenTimeByUser = String.valueOf(selectedHour) + String.valueOf(selectedMinute);
 
@@ -153,7 +152,7 @@ public class CityDetailsActivity extends AppCompatActivity {
         }
 
         // binds to the service
-        bindService(weatherServiceIntent,serviceConnection, Context.BIND_AUTO_CREATE);
+        bindService(weatherServiceIntent,serviceConnection, Context.BIND_ABOVE_CLIENT);
 
         super.onResume();
     }

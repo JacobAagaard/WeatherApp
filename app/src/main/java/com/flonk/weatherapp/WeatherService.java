@@ -9,13 +9,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
+
 import com.google.gson.Gson;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -164,13 +165,13 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
     /*Theoretically, each of the methods in the Binder Interface should have their own lock,
     * for the usage of the service to be thread-safe.
-      this defines the API for the two Activities bound to this services.
+    * this defines the API for the two Activities bound to this services.
      */
     public class WeatherServiceBinder extends Binder{
 
         CityWeatherData getCurrentWeather(String cityName){
             return _allCityWeatherData.GetCityWeatherData(cityName);
-        };
+        }
 
         AllCitiesWeather getAllCitiesWeather(){
             return _allCityWeatherData;
@@ -190,8 +191,8 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             SaveAllCititesWeatherToPref();
         }
 
-        void SubscribedCity(String cityName){
-            _allCityWeatherData.SubscribedCity(cityName);
+        void SubscribedCity(String cityName, String chosenTime){
+            _allCityWeatherData.SubscribedCity(cityName, chosenTime);
             SaveAllCititesWeatherToPref();
             Log.d("WeatherService", "SubscribeedCity: registering broadcastReciever!");
             try {
@@ -287,7 +288,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
                     Thread.sleep(5000);
                     for(int i = 0; i < _allCityWeatherData.GetAllCitiesWeatherData().size(); i++){
                         CityWeatherData cityData = _allCityWeatherData.GetAllCitiesWeatherData().get(i);
-                        Log.d("WeatherService", cityData.Name + cityData.isSubscribed + cityData.scheduledNotificationTime);
+                        Log.d("WeatherService", cityData.Name + ", subscription: " + cityData.isSubscribed + ", time: " + cityData.scheduledNotificationTime);
                     }
 
                     //UpdateListOfCityWeatherData();
@@ -316,10 +317,10 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         Intent intent = new Intent(this, CityDetailsActivity.class);
         Log.d("WeatherService", "Creating a notification for city: " + cityData.Name + " isSubscribed: " + cityData.isSubscribed);
         intent.putExtra(Globals.CITY_WEATHER_NAME, cityData.Name);
-        intent.setAction("dummyAction"); // needs to be set for the extras to not go away when using FLAG_ONE_SHOT. Source: https://stackoverflow.com/questions/3127957/why-the-pendingintent-doesnt-send-back-my-custom-extras-setup-for-the-intent
+//        intent.setAction("dummyAction"); // needs to be set for the extras to not go away when using FLAG_ONE_SHOT. Source: https://stackoverflow.com/questions/3127957/why-the-pendingintent-doesnt-send-back-my-custom-extras-setup-for-the-intent
         intent.putExtra(Globals.CITY_DETAIL_ACTIVITY_STARTED_FROM_SERVICE, true);
 
-        PendingIntent pendIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+        PendingIntent pendIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         builder.setContentIntent(pendIntent);
 
