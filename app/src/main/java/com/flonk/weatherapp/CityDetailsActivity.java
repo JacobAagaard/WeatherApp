@@ -56,7 +56,6 @@ public class CityDetailsActivity extends AppCompatActivity {
         buttonOK.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setResult(RESULT_OK);
                 finish();
             }
         });
@@ -84,13 +83,11 @@ public class CityDetailsActivity extends AppCompatActivity {
                 if(getIntent().getBooleanExtra(Globals.CITY_DETAIL_ACTIVITY_STARTED_FROM_SERVICE, false)){
                     Intent intent = new Intent(CityDetailsActivity.this, CityListActivity.class);
                     intent.putExtra(Globals.CITY_LIST_ACTIVITY_STARTED_FROM_CITY_DETIAL_ACTIVITY, true);
-                    startActivity(intent);
-                }else{
-                    // if the activity was not started from the notification, then it means it was started from the CityListsActivity
-                    // and it should return a sestult.
-                    setResult(RESULT_CODE_REMOVE);
-                }
 
+                    // this call automatiacally calls finish and terminates the activity because "android:noHistory="true" was set for the activity in the XML.
+                    // that tag, specifies that if creating a new intent it should terminate because it has "no history".
+                    startActivity(intent);
+                }
                 finish();
             }
         });
@@ -103,7 +100,8 @@ public class CityDetailsActivity extends AppCompatActivity {
                     toggleButton.setChecked(false);
                 }
                 else{
-
+                    // sets the toggle to false in case the user cancels the timerpicker dialog
+                    toggleButton.setChecked(false);
                     OpenTimePickerDialog();
                 }
             }
@@ -121,9 +119,7 @@ public class CityDetailsActivity extends AppCompatActivity {
             @Override
             public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
 
-                // retrieves the chosen time by the user and sets it for the current city data
-                String chosenTimeByUser = String.valueOf(selectedHour) + String.valueOf(selectedMinute);
-                currentData.scheduledNotificationTime = chosenTimeByUser;
+                Log.d("WeatherApp", "selected hour: "+ selectedHour + " selected minut: "+selectedMinute);
 
                 // retrieves the latest weather information from the service.
                 allCitiesWeather = weatherServiceBinder.getAllCitiesWeather();
@@ -135,13 +131,16 @@ public class CityDetailsActivity extends AppCompatActivity {
                     weatherServiceBinder.UnSubscribeCity(cityData.Name);
                 }
 
-                //weatherServiceBinder.UpdateACityData(currentData);
+
+                // retrieves the chosen time by the user
+                String chosenTimeByUser = String.valueOf(selectedHour) + String.valueOf(selectedMinute);
 
                 // subscribes the current city
-                weatherServiceBinder.SubscribedCity(currentData.Name);
+                weatherServiceBinder.SubscribedCity(currentData.Name, chosenTimeByUser);
 
                 // sets the toggle to true
                 toggleButton.setChecked(true);
+
             }
         }, hour, minute, true);//Yes 24 hour time
         mTimePicker.setTitle("Select Time");
@@ -155,23 +154,14 @@ public class CityDetailsActivity extends AppCompatActivity {
         // checks if the service is already running.
         if(!isMyServiceRunning(WeatherService.class)){
             startService(weatherServiceIntent);
-            Log.d("CityDetailActivity", "Service was not already running!");
+            Log.d("WeatherApp", "Service was not already running!");
         }
         else{
-            Log.d("CityDetailActivity", "Service was already running!");
+            Log.d("WeatherApp", "Service was already running!");
         }
 
         // binds to the service
-        if(!isBoundToWeatherService){
-            bindService(weatherServiceIntent,serviceConnection, Context.BIND_AUTO_CREATE);
-        }
-        // the below code is called in the onServiceConnected call below, but should still be called if the service was already connected.
-        else{
-            // gets the name of the game: ie. the city name of the context the detail view was opened with.
-            String cityName = getIntent().getStringExtra(Globals.CITY_WEATHER_NAME);
-            currentData = weatherServiceBinder.getCurrentWeather(cityName);
-            setupUIWithServiceData();
-        }
+        bindService(weatherServiceIntent,serviceConnection, Context.BIND_AUTO_CREATE);
 
         super.onResume();
     }
@@ -216,11 +206,12 @@ public class CityDetailsActivity extends AppCompatActivity {
         textViewWeatherDescription.setText(currentData.Description);
         imvIcon.setImageResource(Util.GetIconId(currentData.Icon));
 
-        Log.d("CityDetailsAct", "SetupUI" + currentData.Name + "isSubscribed: " + currentData.isSubscribed);
+        Log.d("WeatherApp", "SetupUI" + currentData.Name + "isSubscribed: " + currentData.isSubscribed);
         toggleButton.setChecked(currentData.isSubscribed);
     }
 
     // from : https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android
+    // used to check whether the service is already running
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {

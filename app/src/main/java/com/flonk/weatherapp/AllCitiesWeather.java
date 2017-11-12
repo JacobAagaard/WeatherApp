@@ -1,6 +1,7 @@
 package com.flonk.weatherapp;
 
 import java.util.ArrayList;
+import java.util.concurrent.locks.Lock;
 
 /**
  * Created by Frederik on 11/9/2017.
@@ -21,7 +22,11 @@ public class AllCitiesWeather{
     }
 
     public void AddCity(CityWeatherData data){
-        _listOfCityWeatherData.add(data);
+
+        synchronized (_listOfCityWeatherData)
+        {
+            _listOfCityWeatherData.add(data);
+        }
     }
 
 
@@ -32,7 +37,9 @@ public class AllCitiesWeather{
             return false;
         }
 
-        _listOfCityWeatherData.remove(index);
+        synchronized (_listOfCityWeatherData){
+            _listOfCityWeatherData.remove(index);
+        }
 
         return true;
     }
@@ -47,13 +54,13 @@ public class AllCitiesWeather{
         // retrieves the old state of the cityData
         CityWeatherData oldCity = _listOfCityWeatherData.get(index);
 
-        // sets the the element with new cityData (this only contains new weather data and not the state in terms of subscription)
-        _listOfCityWeatherData.set(index, data);
-
-        // Sets the state if the cityData with the old state
-        _listOfCityWeatherData.get(index).scheduledNotificationTime = oldCity.scheduledNotificationTime;
-        _listOfCityWeatherData.get(index).isSubscribed = oldCity.isSubscribed;
-
+        synchronized (_listOfCityWeatherData){
+            // sets the the element with new cityData (this only contains new weather data and not the state in terms of subscription)
+            _listOfCityWeatherData.set(index, data);
+            // Sets the state if the cityData with the old state
+            _listOfCityWeatherData.get(index).scheduledNotificationTime = oldCity.scheduledNotificationTime;
+            _listOfCityWeatherData.get(index).isSubscribed = oldCity.isSubscribed;
+        }
         return true;
     }
 
@@ -100,15 +107,22 @@ public class AllCitiesWeather{
     }
 
     // subscribes the specified city.
-    public void SubscribedCity(String cityName){
+    public void SubscribedCity(String cityName, String subscribedTime){
         CityWeatherData cityData = _listOfCityWeatherData.get(GetIndexOfCity(cityName));
-        cityData.isSubscribed = true;
+
+        synchronized (_listOfCityWeatherData){
+            cityData.isSubscribed = true;
+            cityData.scheduledNotificationTime = subscribedTime;
+        }
     }
 
     // unsubscribes the specified city
     public void UnSubScribeCity(String name){
         CityWeatherData cityData = _listOfCityWeatherData.get(GetIndexOfCity(name));
-        cityData.isSubscribed = false;
-        cityData.scheduledNotificationTime = null;
+
+        synchronized (_listOfCityWeatherData){
+            cityData.isSubscribed = false;
+            cityData.scheduledNotificationTime = null;
+        }
     }
 }

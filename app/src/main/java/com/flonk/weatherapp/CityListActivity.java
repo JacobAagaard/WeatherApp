@@ -8,9 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -22,8 +22,6 @@ import android.widget.Toast;
 import org.json.JSONException;
 import java.nio.channels.NotYetBoundException;
 import static com.flonk.weatherapp.Globals.CITY_WEATHER_NAME;
-import static com.flonk.weatherapp.Globals.REQUEST_CODE_DETAILS;
-import static com.flonk.weatherapp.Globals.RESULT_CODE_REMOVE;
 
 public class CityListActivity extends AppCompatActivity{
 
@@ -85,6 +83,7 @@ public class CityListActivity extends AppCompatActivity{
             }
         });
 
+        // when clicking on one of the items in the lists, it starts the detailed view
         listViewCities.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -92,16 +91,17 @@ public class CityListActivity extends AppCompatActivity{
             }
         });
 
+        // specifies the filter that catches the new result message from the service
         IntentFilter filter = new IntentFilter(Globals.WEATHER_QUERY_RESULT_FILTER);
 
-        //Retrieve new data from Weather Service
+        // Defines the broadcast reciever for listening on new data from the server
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String cityName = intent.getStringExtra(CITY_WEATHER_NAME);
                 CityWeatherData newCityWeatherData = weatherServiceBinder.getCurrentWeather(cityName);
 
-                Log.d("CityListActivity", "broadcastReciever: newcityData from: " + cityName);
+                Log.d("WeatherApp", "broadcastReciever: newcityData from: " + cityName);
 
                 if(allCitiesWeather.CityExists(cityName)){
                     allCitiesWeather.UpdateCityWeatherData(cityName, newCityWeatherData);
@@ -112,7 +112,95 @@ public class CityListActivity extends AppCompatActivity{
                 }
             }
         };
+    }
+
+    @Override
+    protected void onResume() {
+        // defines the intent for the WeatherService
+        Intent weatherServiceIntent = new Intent(CityListActivity.this, WeatherService.class);
+
+        if(!isMyServiceRunning(WeatherService.class)){
+            startService(weatherServiceIntent);
+            Log.d("WeatherApp", "Service was not already running!");
+        }
+        else{
+            Log.d("WeatherApp", "Service was already running!");
+        }
+        // binds to the service
+        bindService(weatherServiceIntent,mConnection, Context.BIND_AUTO_CREATE);
+
+        // registers receivers
         registerReceiver(broadcastReceiver, filter);
+
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        if(isBoundToWeatherService){
+            try{
+                unbindService(mConnection);
+            } catch (Exception e){
+                Log.d("WeatherApp", e.getMessage());
+            }
+        }
+        if(broadcastReceiver != null){
+            try {
+                unregisterReceiver(broadcastReceiver);
+            } catch (Exception e){
+                Log.d("WeatherApp", "onPause in CityListActivity: " + e.getMessage());
+            }
+        }
+        super.onPause();
+    }
+
+    private void startCityDetailsActivity(int position) {
+        CityWeatherData currentData = allCitiesWeather.GetAllCitiesWeatherData().get(position);
+
+        Intent startCityDetailsIntent = new Intent(getApplicationContext(), CityDetailsActivity.class);
+        startCityDetailsIntent.putExtra(CITY_WEATHER_NAME, currentData.Name);
+        startActivity(startCityDetailsIntent);
+    }
+
+    private ServiceConnection mConnection= new ServiceConnection(){
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            // gets the binder from the service
+            weatherServiceBinder = (WeatherService.WeatherServiceBinder) iBinder;
+
+            // updates the local copy of all the city data
+            allCitiesWeather = new AllCitiesWeather(weatherServiceBinder.getAllCitiesWeather().GetAllCitiesWeatherData());
+
+            isBoundToWeatherService = true;
+            setupMyCrazyAdapterArrayList();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            isBoundToWeatherService = false;
+        }
+    };
+
+    // used to setup the adaptor for the listview
+    private void setupMyCrazyAdapterArrayList() {
+        // defines the adaptor for the listview
+        cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
+                0, allCitiesWeather.GetAllCitiesWeatherData());
+        // sets the adaptor
+        listViewCities.setAdapter(cityWeatherDataAdapter);
+    }
+
+    // from : https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android
+    // used to check whether the service is already running
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //Inspired by: https://stackoverflow.com/questions/1109022/close-hide-the-android-soft-keyboard
@@ -125,105 +213,5 @@ public class CityListActivity extends AppCompatActivity{
             view = new View(activity);
         }
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == REQUEST_CODE_DETAILS){
-            switch (resultCode){
-                case RESULT_CODE_REMOVE:
-                    allCitiesWeather = weatherServiceBinder.getAllCitiesWeather();
-                    cityWeatherDataAdapter.notifyDataSetChanged();
-                    break;
-                case RESULT_OK:
-                    allCitiesWeather = weatherServiceBinder.getAllCitiesWeather();
-                    break;
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
-    protected void onResume() {
-        Intent weatherServiceIntent = new Intent(CityListActivity.this, WeatherService.class);
-
-        if(!isMyServiceRunning(WeatherService.class)){
-            startService(weatherServiceIntent);
-            Log.d("CityListActivity", "Service was not already running!");
-        }
-        else{
-            Log.d("CityListActivity", "Service was already running!");
-        }
-
-        bindService(weatherServiceIntent,mConnection, Context.BIND_AUTO_CREATE);
-        registerReceiver(broadcastReceiver, filter);
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        if(isBoundToWeatherService){
-            try{
-                unbindService(mConnection);
-            } catch (Exception e){
-                Log.d("CityListsActivity", e.getMessage());
-            }
-        }
-        if(broadcastReceiver != null){
-            unregisterReceiver(broadcastReceiver);
-        }
-        super.onPause();
-    }
-
-
-    private void refreshList() throws JSONException {
-        Toast.makeText(this, "Refreshing list...", Toast.LENGTH_SHORT).show();
-
-        if(isBoundToWeatherService){
-            weatherServiceBinder.RefreshCityWeatherList();
-        }
-    }
-
-    private void startCityDetailsActivity(int position) {
-        CityWeatherData currentData = allCitiesWeather.GetAllCitiesWeatherData().get(position);
-
-        Intent startCityDetailsIntent = new Intent(getApplicationContext(), CityDetailsActivity.class);
-        startCityDetailsIntent.putExtra(CITY_WEATHER_NAME, currentData.Name);
-        startActivityForResult(startCityDetailsIntent, REQUEST_CODE_DETAILS);
-    }
-
-    private ServiceConnection mConnection= new ServiceConnection(){
-
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            weatherServiceBinder = (WeatherService.WeatherServiceBinder) iBinder;
-
-            isBoundToWeatherService = true;
-            setupMyCrazyAdapterArrayList();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            isBoundToWeatherService = false;
-        }
-    };
-
-    private void setupMyCrazyAdapterArrayList() {
-        allCitiesWeather = new AllCitiesWeather(weatherServiceBinder.getAllCitiesWeather().GetAllCitiesWeatherData());
-
-        cityWeatherDataAdapter = new CityWeatherDataAdapter(CityListActivity.this,
-                0, allCitiesWeather.GetAllCitiesWeatherData());
-        listViewCities.setAdapter(cityWeatherDataAdapter);
-    }
-
-    // from : https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android
-    private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
     }
 }
