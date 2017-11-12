@@ -2,30 +2,22 @@ package com.flonk.weatherapp;
 
 import android.app.ActivityManager;
 import android.app.TimePickerDialog;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.os.IBinder;
-import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-
 import java.util.Calendar;
-import java.util.List;
-
-import static com.flonk.weatherapp.Globals.CITY_WEATHER_NAME;
 import static com.flonk.weatherapp.Globals.RESULT_CODE_REMOVE;
 
 public class CityDetailsActivity extends AppCompatActivity {

@@ -155,7 +155,7 @@ public class CityListActivity extends AppCompatActivity{
             Log.d("CityListActivity", "Service was already running!");
         }
 
-        bindService(weatherServiceIntent,mConnection, Context.BIND_AUTO_CREATE);
+        bindService(weatherServiceIntent,mConnection, Context.BIND_ABOVE_CLIENT);
         registerReceiver(broadcastReceiver, filter);
         super.onResume();
     }

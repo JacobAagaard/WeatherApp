@@ -162,11 +162,14 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         sendBroadcast(resultIntent);
     }
 
+    /*Theoretically, each of the methods in the Binder Interface should have their own lock,
+    * for the usage of the service to be thread-safe.
+    */
     public class WeatherServiceBinder extends Binder{
 
         CityWeatherData getCurrentWeather(String cityName){
             return _allCityWeatherData.GetCityWeatherData(cityName);
-        };
+        }
 
         AllCitiesWeather getAllCitiesWeather(){
             return _allCityWeatherData;

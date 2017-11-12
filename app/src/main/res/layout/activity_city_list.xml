@@ -39,14 +39,14 @@
         android:ems="10"
         android:hint="@string/et_add_city_hint"
         android:inputType="textPersonName"
-        android:selectAllOnFocus="true"
         app:layout_constraintBottom_toTopOf="@+id/guideline"
         app:layout_constraintEnd_toStartOf="@+id/buttonAdd"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/buttonAdd"
         app:layout_constraintVertical_bias="0.100000024"
         android:layout_marginRight="8dp"
-        android:layout_marginLeft="16dp" />
+        android:layout_marginLeft="16dp"
+        android:windowSoftInputMode="adjustNothing"/>
 
     <android.support.constraint.Guideline
         android:id="@+id/guideline"
