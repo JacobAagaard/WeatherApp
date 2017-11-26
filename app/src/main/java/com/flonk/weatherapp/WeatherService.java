@@ -204,7 +204,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         void SubscribedCity(String cityName, String chosenTime, String readableTime){
             _allCityWeatherData.SubscribedCity(cityName, chosenTime, readableTime);
             SaveAllCititesWeatherToPref();
-            Log.d("WeatherService", "SubscribeedCity: registering broadcastReciever!");
+            Log.d("WeatherService", "SubscribedCity: registering broadcastReciever!");
             try {
                 registerReceiver(timerReciever, timerFilter);
             }
@@ -214,10 +214,10 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         }
 
         void UnsubscribeCity(String name){
-            _allCityWeatherData.UnSubScribeCity(name);
+            _allCityWeatherData.UnsubscribeCity(name);
             SaveAllCititesWeatherToPref();
             notificationManager.cancel(notificationId);
-            Log.d("WeatherService", "SubscribeedCity: Unregistering broadcastReciever!");
+            Log.d("WeatherService", "SubscribedCity: Unregistering broadcastReciever!");
             try {
                 unregisterReceiver(timerReciever);
             } catch (Exception e)
@@ -264,7 +264,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             icon = jsonObject.getJSONArray("weather").getJSONObject(0).getString("icon");
             humidity = jsonObject.getJSONObject("main").getString("humidity");
 
-            java.util.Date time = new java.util.Date((long) jsonObject.getLong("dt") * 1000);
+            java.util.Date time = new java.util.Date(jsonObject.getLong("dt") * 1000);
 
             SimpleDateFormat sd = new SimpleDateFormat("HH:mm - dd-MM-yyyy");
 

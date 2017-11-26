@@ -1,7 +1,6 @@
 package com.flonk.weatherapp;
 
 import java.util.ArrayList;
-import java.util.concurrent.locks.Lock;
 
 /**
  * Created by Frederik on 11/9/2017.
@@ -57,9 +56,10 @@ public class AllCitiesWeather{
         synchronized (_listOfCityWeatherData){
             // sets the the element with new cityData (this only contains new weather data and not the state in terms of subscription)
             _listOfCityWeatherData.set(index, data);
-            // Sets the state if the cityData with the old state
+            // Sets the state of the cityData with the old state
             _listOfCityWeatherData.get(index).scheduledNotificationTime = oldCity.scheduledNotificationTime;
             _listOfCityWeatherData.get(index).isSubscribed = oldCity.isSubscribed;
+            _listOfCityWeatherData.get(index).readableTime = oldCity.readableTime;
         }
         return true;
     }
@@ -79,8 +79,7 @@ public class AllCitiesWeather{
     }
 
     public boolean CityExists(String cityName){
-        if(GetIndexOfCity(cityName) == -1) return false;
-        return true;
+        return GetIndexOfCity(cityName) != -1;
     }
 
     // returns the index of the specified city
@@ -118,7 +117,7 @@ public class AllCitiesWeather{
     }
 
     // unsubscribes the specified city
-    public void UnSubScribeCity(String name){
+    public void UnsubscribeCity(String name){
         CityWeatherData cityData = _listOfCityWeatherData.get(GetIndexOfCity(name));
 
         synchronized (_listOfCityWeatherData){

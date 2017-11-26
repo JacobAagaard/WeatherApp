@@ -18,9 +18,7 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 
 public class CityDetailsActivity extends AppCompatActivity {
 
@@ -99,6 +97,10 @@ public class CityDetailsActivity extends AppCompatActivity {
                     // sets the toggle to false in case the user cancels the timerpicker dialog
                     toggleButton.setChecked(false);
                     OpenTimePickerDialog();
+                    if (currentData.readableTime != null){
+                        CityWeatherData cityData = allCitiesWeather.GetSubscribedCity();
+                        cityData.readableTime = currentData.readableTime;
+                    }
                 }
             }
         });
@@ -145,7 +147,7 @@ public class CityDetailsActivity extends AppCompatActivity {
                 // subscribes the current city
                 weatherServiceBinder.SubscribedCity(currentData.Name, chosenTimeByUser, readableTime);
 
-                Toast.makeText(CityDetailsActivity.this, chosenTimeByUser, Toast.LENGTH_LONG).show();
+                //Toast.makeText(CityDetailsActivity.this, chosenTimeByUser, Toast.LENGTH_LONG).show();
 
                 // sets the toggle to true
                 toggleButton.setChecked(true);
@@ -215,7 +217,7 @@ public class CityDetailsActivity extends AppCompatActivity {
         textViewTemperature.setText(currentData.Temperature);
         textViewWeatherDescription.setText(currentData.Description);
         imvIcon.setImageResource(Util.GetIconId(currentData.Icon));
-        Log.d("WeatherApp", "SetupUI" + currentData.Name + "isSubscribed: " + currentData.isSubscribed);
+        Log.d("WeatherApp", "SetupUI for city: " + currentData.Name + " - city isSubscribed: " + currentData.isSubscribed);
         toggleButton.setChecked(currentData.isSubscribed);
 
         if(currentData.isSubscribed){
