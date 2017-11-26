@@ -109,7 +109,7 @@ public class CityDetailsActivity extends AppCompatActivity {
     private void OpenTimePickerDialog(){
         Calendar mcurrentTime = Calendar.getInstance();
         int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
-        int minute = mcurrentTime.get(Calendar.MINUTE);
+        final int minute = mcurrentTime.get(Calendar.MINUTE);
         TimePickerDialog mTimePicker;
         mTimePicker = new TimePickerDialog(CityDetailsActivity.this, new TimePickerDialog.OnTimeSetListener() {
             @Override
@@ -128,20 +128,28 @@ public class CityDetailsActivity extends AppCompatActivity {
                 }
 
                 // retrieves the chosen time by the user
-                String chosenTimeByUser = String.valueOf(selectedHour) + String.valueOf(selectedMinute);
+                String hours = String.valueOf(selectedHour);
+                String minutes = String.valueOf(selectedMinute);
+                String chosenTimeByUser =  hours+minutes;
 
-                if(chosenTimeByUser.length() < 4){
-                    chosenTimeByUser = "0".concat(chosenTimeByUser);
+                // editing hours and minutes to be readble as mm:hh
+                if(hours.length() < 2){
+                    hours = "0".concat(hours);
+                }
+                if(minutes.length() < 2){
+                    minutes = "0".concat(minutes);
                 }
 
+                String readableTime =  hours+minutes;
+
                 // subscribes the current city
-                weatherServiceBinder.SubscribedCity(currentData.Name, chosenTimeByUser);
+                weatherServiceBinder.SubscribedCity(currentData.Name, chosenTimeByUser, readableTime);
 
                 Toast.makeText(CityDetailsActivity.this, chosenTimeByUser, Toast.LENGTH_LONG).show();
 
                 // sets the toggle to true
                 toggleButton.setChecked(true);
-                txtViewSubscribedTime.setText(getResources().getText(R.string.subscribedText)+ "\n" + currentData.scheduledNotificationTime.replaceAll("..(?!$)", "$0:")); // https://stackoverflow.com/questions/23404475/what-is-the-way-to-insert-a-colon-after-every-two-characters-in-a-string/23404646
+                txtViewSubscribedTime.setText(getResources().getText(R.string.subscribedText)+ "\n" + currentData.readableTime.replaceAll("..(?!$)", "$0:")); // https://stackoverflow.com/questions/23404475/what-is-the-way-to-insert-a-colon-after-every-two-characters-in-a-string/23404646
 
             }
         }, hour, minute, true);//Yes 24 hour time
@@ -211,7 +219,7 @@ public class CityDetailsActivity extends AppCompatActivity {
         toggleButton.setChecked(currentData.isSubscribed);
 
         if(currentData.isSubscribed){
-            txtViewSubscribedTime.setText(getResources().getText(R.string.subscribedText)+ "\n" + currentData.scheduledNotificationTime.replaceAll("..(?!$)", "$0:")); // https://stackoverflow.com/questions/23404475/what-is-the-way-to-insert-a-colon-after-every-two-characters-in-a-string/23404646
+            txtViewSubscribedTime.setText(getResources().getText(R.string.subscribedText)+ "\n" + currentData.readableTime.replaceAll("..(?!$)", "$0:")); // https://stackoverflow.com/questions/23404475/what-is-the-way-to-insert-a-colon-after-every-two-characters-in-a-string/23404646
         }
     }
 

@@ -107,12 +107,13 @@ public class AllCitiesWeather{
     }
 
     // subscribes the specified city.
-    public void SubscribedCity(String cityName, String subscribedTime){
+    public void SubscribedCity(String cityName, String subscribedTime, String readableTime){
         CityWeatherData cityData = _listOfCityWeatherData.get(GetIndexOfCity(cityName));
 
         synchronized (_listOfCityWeatherData){
             cityData.isSubscribed = true;
             cityData.scheduledNotificationTime = subscribedTime;
+            cityData.readableTime = readableTime;
         }
     }
 
@@ -123,6 +124,7 @@ public class AllCitiesWeather{
         synchronized (_listOfCityWeatherData){
             cityData.isSubscribed = false;
             cityData.scheduledNotificationTime = null;
+            cityData.readableTime = null;
         }
     }
 }

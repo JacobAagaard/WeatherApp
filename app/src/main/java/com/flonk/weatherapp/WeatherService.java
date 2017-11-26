@@ -201,8 +201,8 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             SaveAllCititesWeatherToPref();
         }
 
-        void SubscribedCity(String cityName, String chosenTime){
-            _allCityWeatherData.SubscribedCity(cityName, chosenTime);
+        void SubscribedCity(String cityName, String chosenTime, String readableTime){
+            _allCityWeatherData.SubscribedCity(cityName, chosenTime, readableTime);
             SaveAllCititesWeatherToPref();
             Log.d("WeatherService", "SubscribeedCity: registering broadcastReciever!");
             try {

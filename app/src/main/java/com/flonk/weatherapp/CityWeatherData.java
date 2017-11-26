@@ -14,6 +14,7 @@ public class CityWeatherData {
     public String TimeStamp;
     public boolean isSubscribed;
     public String scheduledNotificationTime;
+    public String readableTime;
 
     public CityWeatherData(String name, String temp, String humidity, String description, String icon, String timeStamp){
         Name = name;
