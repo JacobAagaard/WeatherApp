@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">WeatherApp 16</string>
+    <string name="tv_celsius">\u00B0C</string>
+    <string name="tv_weather_description">Regner Altid</string>
+    <string name="tv_title_description">Beskrivelse: </string>
+    <string name="btn_remove">Fjern</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_add">Tilføj</string>
+    <string name="btn_refresh">Opdater</string>
+    <string name="tv_percentage">%</string>
+    <string name="tv_humidty">10.0</string>
+    <string name="tv_cityname">ByNavn</string>
+    <string name="imv_weather_icon">VejrBeskrivelseIkon</string>
+    <string name="tv_temperature">25.0</string>
+    <string name="et_add_city_hint">Tilføj By &#8230;</string>
+    <string name="Subscribe">Abonner:</string>
+    <string name="ON">ON</string>
+    <string name="OFF">OFF</string>
+    <string name="humidity">Fugtighed</string>
+    <string name="temperature">Temperatur</string>
+    <string name="subscribedText">Opdatering hver dag kl: </string>
+
+    <!--Toasts -->
+    <string name="error404">Ingen by med dette navn er registreret på databasen!</string>
+    <string name="error429">bro...... du laver alt for mange requests... Chill down broder!</string>
+    <string name="error">Fejl: </string>
+    <string name="nullQuery">Forespørgsel returnede null</string>
+    <string name="noCityName">Intet bynavn er indtastet!</string>
+    <string name="refreshingData">Opdatere vejr data for byer!</string>
+    <string name="notBound">Ikke bundet til service!</string>
+</resources>

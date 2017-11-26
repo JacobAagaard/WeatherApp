@@ -13,5 +13,4 @@ public interface WeatherQueryCallback {
      * the result of the task. Expected to be called from the main thread.
      */
     void QueryResult(WeatherQueryHelper.WeatherQueryResult result);
-
 }

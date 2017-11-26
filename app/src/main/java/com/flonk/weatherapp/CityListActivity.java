@@ -53,7 +53,7 @@ public class CityListActivity extends AppCompatActivity{
             @Override
             public void onClick(View v) {
                 if (editTextAdd.getText().toString().contentEquals(""))
-                    Toast.makeText(CityListActivity.this, "You must enter city name", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CityListActivity.this, R.string.noCityName, Toast.LENGTH_SHORT).show();
                 else{
                     String enteredCityName = editTextAdd.getText().toString().trim();
                     hideKeyboard(CityListActivity.this);
@@ -78,6 +78,7 @@ public class CityListActivity extends AppCompatActivity{
             public void onClick(View v) {
                 try {
                     if(isBoundToWeatherService){
+                        Toast.makeText(CityListActivity.this, R.string.refreshingData, Toast.LENGTH_SHORT).show();
                         weatherServiceBinder.RefreshCityWeatherList();
                     }
                 } catch (JSONException e) {
@@ -149,15 +150,6 @@ public class CityListActivity extends AppCompatActivity{
             unregisterReceiver(broadcastReceiver);
         }
         super.onPause();
-    }
-
-
-    private void refreshList() throws JSONException {
-        Toast.makeText(this, "Refreshing list...", Toast.LENGTH_SHORT).show();
-
-        if(isBoundToWeatherService){
-            weatherServiceBinder.RefreshCityWeatherList();
-        }
     }
 
     private void startCityDetailsActivity(int position) {

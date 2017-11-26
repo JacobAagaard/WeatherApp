@@ -18,12 +18,14 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 
 public class CityDetailsActivity extends AppCompatActivity {
 
     private Button buttonOK, buttonRemove;
-    private TextView textViewCityName, textViewHumidity, textViewWeatherDescription, textViewTemperature;
+    private TextView textViewCityName, textViewHumidity, textViewWeatherDescription, textViewTemperature, txtViewSubscribedTime;
     private ImageView imvIcon;
     private ToggleButton toggleButton;
     private WeatherService.WeatherServiceBinder weatherServiceBinder;
@@ -44,6 +46,7 @@ public class CityDetailsActivity extends AppCompatActivity {
         textViewTemperature = findViewById(R.id.textViewTemperature);
         imvIcon = findViewById(R.id.imvIcon);
         toggleButton = findViewById(R.id.toggleButtonSubscription);
+        txtViewSubscribedTime = findViewById(R.id.txtViewSubscribedTime);
 
         buttonOK.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,13 +63,13 @@ public class CityDetailsActivity extends AppCompatActivity {
                 if(isBoundToWeatherService){
                     // when removing a cityData that is subscribed, it gets unsubscribed first
                     if(currentData.isSubscribed){
-                        weatherServiceBinder.UnSubscribeCity(currentData.Name);
+                        weatherServiceBinder.UnsubscribeCity(currentData.Name);
                     }
                     weatherServiceBinder.RemoveCity(currentData.Name);
                 }
                 else
                 {
-                    Toast.makeText(CityDetailsActivity.this, "NOT BOUND", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CityDetailsActivity.this, R.string.notBound, Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -88,8 +91,9 @@ public class CityDetailsActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if(!toggleButton.isChecked()){
-                    weatherServiceBinder.UnSubscribeCity(currentData.Name);
+                    weatherServiceBinder.UnsubscribeCity(currentData.Name);
                     toggleButton.setChecked(false);
+                    txtViewSubscribedTime.setText("");
                 }
                 else{
                     // sets the toggle to false in case the user cancels the timerpicker dialog
@@ -120,17 +124,24 @@ public class CityDetailsActivity extends AppCompatActivity {
                 CityWeatherData cityData = allCitiesWeather.GetSubscribedCity();
 
                 if(!(cityData == null)){
-                    weatherServiceBinder.UnSubscribeCity(cityData.Name);
+                    weatherServiceBinder.UnsubscribeCity(cityData.Name);
                 }
 
                 // retrieves the chosen time by the user
                 String chosenTimeByUser = String.valueOf(selectedHour) + String.valueOf(selectedMinute);
 
+                if(chosenTimeByUser.length() < 4){
+                    chosenTimeByUser = "0".concat(chosenTimeByUser);
+                }
+
                 // subscribes the current city
                 weatherServiceBinder.SubscribedCity(currentData.Name, chosenTimeByUser);
 
+                Toast.makeText(CityDetailsActivity.this, chosenTimeByUser, Toast.LENGTH_LONG).show();
+
                 // sets the toggle to true
                 toggleButton.setChecked(true);
+                txtViewSubscribedTime.setText(getResources().getText(R.string.subscribedText)+ "\n" + currentData.scheduledNotificationTime.replaceAll("..(?!$)", "$0:")); // https://stackoverflow.com/questions/23404475/what-is-the-way-to-insert-a-colon-after-every-two-characters-in-a-string/23404646
 
             }
         }, hour, minute, true);//Yes 24 hour time
@@ -196,9 +207,12 @@ public class CityDetailsActivity extends AppCompatActivity {
         textViewTemperature.setText(currentData.Temperature);
         textViewWeatherDescription.setText(currentData.Description);
         imvIcon.setImageResource(Util.GetIconId(currentData.Icon));
-
         Log.d("WeatherApp", "SetupUI" + currentData.Name + "isSubscribed: " + currentData.isSubscribed);
         toggleButton.setChecked(currentData.isSubscribed);
+
+        if(currentData.isSubscribed){
+            txtViewSubscribedTime.setText(getResources().getText(R.string.subscribedText)+ "\n" + currentData.scheduledNotificationTime.replaceAll("..(?!$)", "$0:")); // https://stackoverflow.com/questions/23404475/what-is-the-way-to-insert-a-colon-after-every-two-characters-in-a-string/23404646
+        }
     }
 
     // from : https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android

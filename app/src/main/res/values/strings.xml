@@ -13,8 +13,20 @@
     <string name="imv_weather_icon">WeatherDescriptionIcon</string>
     <string name="tv_temperature">25.0</string>
     <string name="et_add_city_hint">Add City &#8230;</string>
-    <string name="Subscribe">Subscribe</string>
+    <string name="Subscribe">Subscribe:</string>
     <string name="ON">ON</string>
     <string name="OFF">OFF</string>
+    <string name="humidity">Humidity</string>
+    <string name="temperature">Temperature</string>
+    <string name="subscribedText">Updates everyday at: </string>
 
+
+    <!--Toasts-->
+    <string name="error404">No City with that name is registered on the database!</string>
+    <string name="error429">bro...... to many requests... Chill down mate!</string>
+    <string name="error">Error: </string>
+    <string name="nullQuery">Query returned null</string>
+    <string name="noCityName">No City name is entered!</string>
+    <string name="refreshingData">Refreshing city data</string>
+    <string name="notBound">Not Bound to service!</string>
 </resources>

@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import static com.flonk.weatherapp.Globals.CITY_WEATHER_NAME;
@@ -38,6 +39,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
     private NotificationManager notificationManager;
     private BroadcastReceiver timerReciever;
     private IntentFilter timerFilter;
+    private boolean createNotification = false;
 
 
     @Override
@@ -55,13 +57,6 @@ public class WeatherService extends Service implements WeatherQueryCallback {
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
         weatherQueryHelper = new WeatherQueryHelper(connectivityManager);
-
-        try {
-            Run();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
 
         timerFilter = new IntentFilter();
         timerFilter.addAction(Intent.ACTION_TIME_TICK);
@@ -83,8 +78,14 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
 
                         if(citySceduledTime.equals(currentTime)){
-                            Log.d("WeatherService", "TimerReciever: Creating Notification!");
-                            CreateNotification(cityData);
+                            // boolean that specifies when a query result returns it has to create a notification also!
+                            createNotification = true;
+
+                            try {
+                                weatherQueryHelper.Query(cityData.Name, WeatherService.this);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
 
@@ -92,13 +93,20 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             }
         };
 
-        if (!(_allCityWeatherData.GetSubscribedCity() == null)){
-            try{
-                registerReceiver(timerReciever, timerFilter);
-                Log.d("WeatherService", "TimerReciever Registered");
-            } catch (Exception e){
-                Log.d("WeatherService", e.getMessage());
-            }
+
+        // registers reciever for the timer broadcast
+        try{
+            registerReceiver(timerReciever, timerFilter);
+            Log.d("WeatherService", "TimerReciever Registered");
+        } catch (Exception e){
+            Log.d("WeatherService", e.getMessage());
+        }
+
+
+        try {
+            Run();
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
         super.onCreate();
@@ -108,9 +116,6 @@ public class WeatherService extends Service implements WeatherQueryCallback {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("WeatherService","OnStartCommand was called!");
         return START_STICKY;
-    }
-
-    public WeatherService() {
     }
 
     @Override
@@ -127,13 +132,13 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             String errorMsg = queryResult.mException.getMessage();
 
             if(errorMsg.contains("404")){
-                Toast.makeText(this, "No City with that name is registered on the database! : " + errorMsg,Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.error404, Toast.LENGTH_LONG).show();
             }
             else if(errorMsg.contains("429")){
-                Toast.makeText(this, "bro...... to many requests... Chill down mate : " + errorMsg, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.error429, Toast.LENGTH_SHORT).show();
             }
             else{
-                Toast.makeText(this, "error: " + errorMsg,Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.error + errorMsg,Toast.LENGTH_LONG).show();
             }
             return;
         }
@@ -141,7 +146,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         CityWeatherData newCityWeatherData = CreateCityWeatherDataFromJson(queryResult.mResultValue);
 
         if(newCityWeatherData == null){
-            Toast.makeText(this, "Query return null", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.nullQuery, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -155,6 +160,11 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             String cityName = newCityWeatherData.Name;
             _allCityWeatherData.UpdateCityWeatherData(cityName, newCityWeatherData);
             SaveAllCititesWeatherToPref(); // TODO: dont save for every query
+        }
+
+        if(createNotification){
+            CreateNotification(newCityWeatherData);
+            createNotification = false;
         }
 
         // broadcasts that new data is available
@@ -203,7 +213,7 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             }
         }
 
-        void UnSubscribeCity(String name){
+        void UnsubscribeCity(String name){
             _allCityWeatherData.UnSubScribeCity(name);
             SaveAllCititesWeatherToPref();
             notificationManager.cancel(notificationId);
@@ -214,10 +224,6 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             {
                 Log.d("WeatherService", "exception: " + e.getMessage());
             }
-        }
-
-        void UpdateACityData(CityWeatherData cityData){
-            _allCityWeatherData.UpdateCityWeatherData(cityData.Name, cityData);
         }
     }
 
@@ -257,7 +263,12 @@ public class WeatherService extends Service implements WeatherQueryCallback {
             description = jsonObject.getJSONArray("weather").getJSONObject(0).getString("description");
             icon = jsonObject.getJSONArray("weather").getJSONObject(0).getString("icon");
             humidity = jsonObject.getJSONObject("main").getString("humidity");
-            timestamp = jsonObject.getString("dt");
+
+            java.util.Date time = new java.util.Date((long) jsonObject.getLong("dt") * 1000);
+
+            SimpleDateFormat sd = new SimpleDateFormat("HH:mm - dd-MM-yyyy");
+
+            timestamp = sd.format(time);
 
             return new CityWeatherData(name, temp, humidity, description, icon, timestamp);
         }
@@ -285,15 +296,12 @@ public class WeatherService extends Service implements WeatherQueryCallback {
         public void run() {
             try {
                 while(true) {
-                    Thread.sleep(5000);
-                    for(int i = 0; i < _allCityWeatherData.GetAllCitiesWeatherData().size(); i++){
-                        CityWeatherData cityData = _allCityWeatherData.GetAllCitiesWeatherData().get(i);
-                        Log.d("WeatherService", cityData.Name + ", subscription: " + cityData.isSubscribed + ", time: " + cityData.scheduledNotificationTime);
-                    }
-
-                    //UpdateListOfCityWeatherData();
+                    Thread.sleep(Globals.DELAY_BETWEEN_UPDATES);
+                    UpdateListOfCityWeatherData();
                 }
             } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
@@ -305,13 +313,11 @@ public class WeatherService extends Service implements WeatherQueryCallback {
 
     // inspiration from: https://stackoverflow.com/questions/15758980/android-service-needs-to-run-always-never-pause-or-stop
     private void CreateNotification(CityWeatherData cityData){
-
-
         Notification.Builder builder = new Notification.Builder(this)
-                .setContentTitle(cityData.Name)
+                .setContentTitle(cityData.Name + ", Updated: " + cityData.TimeStamp)
                 .setContentText(cityData.Description + ", " + cityData.Temperature + DEGREE_SIGN + "C")
-                //.setLargeIcon(BitmapFactory.decodeResource(this.getResources(), Util.GetIconId(cityData.Icon)))
-                .setSmallIcon(R.mipmap.ic_launcher_round);
+                .setSmallIcon(R.mipmap.ic_launcher_round)
+                .setAutoCancel(true); // means when pressed, it goes away!
 
         // we need to build a basic notification first, then update it
         Intent intent = new Intent(this, CityDetailsActivity.class);
